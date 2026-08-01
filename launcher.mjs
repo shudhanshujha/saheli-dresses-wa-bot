@@ -21,6 +21,8 @@ function writeJSON(name, data) {
 
 let clientInstance = null;
 let currentQR = null;
+let lastError = null;
+let launchAttempts = 0;
 
 let supabase = null;
 let supabaseEnabled = false;
@@ -374,6 +376,8 @@ app.get('/api/status', (req, res) => {
     chatsCount: 0,
     contactsCount: 0,
     uptime: clientInstance?._startTime || null,
+    lastError: lastError || null,
+    launchAttempts,
   });
 });
 
@@ -1669,7 +1673,9 @@ create({
     }
   });
 }).catch(e => {
-  console.error('FAILED:', e.message);
+  launchAttempts++;
+  lastError = e?.message || String(e);
+  console.error('FAILED:', lastError);
   if (!clientInstance) setTimeout(initClient, 5000);
 });
 }

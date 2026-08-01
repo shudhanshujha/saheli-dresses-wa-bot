@@ -1,0 +1,14 @@
+node_modules
+.env
+.git
+.gitignore
+.vercel
+session-data
+.wwebjs_auth
+.wwebjs_cache
+data/*.json
+*.log
+bot.err
+bot.out
+scratch
+README.md

@@ -1607,7 +1607,7 @@ create({
   sessionId: 'main',
   headless: true,
   useChrome: true,
-  executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
   useStealth: true,
   port: 8080,
   multiDevice: true,

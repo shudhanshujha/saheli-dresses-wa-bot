@@ -1633,7 +1633,7 @@ create({
   eventMode: true,
   waitForRipeSession: false,
   defaultViewport: null,
-  userDataDir: './session-data',
+  userDataDir: process.env.WA_USER_DATA_DIR || './session-data',
   skipBrokenMethodsCheck: true,
 }).then(client => {
   clientInstance = client;

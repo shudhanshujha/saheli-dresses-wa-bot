@@ -24,7 +24,13 @@ services:
         value: "30"
       - key: WAITLIST_NO_REPLY_HOURS
         value: "24"
+      - key: WA_USER_DATA_DIR
+        value: /app/session-data
       - key: NODE_ENV
         value: production
     healthCheckPath: /api/status
     plan: starter
+    disk:
+      name: wa-session-data
+      mountPath: /app/session-data
+      sizeGB: 1

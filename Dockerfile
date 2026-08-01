@@ -31,6 +31,10 @@ RUN npm ci --only=production
 
 COPY . .
 
+# Apply open-wa v4.76.0 compatibility patch (window.Debug no longer exists in modern WhatsApp Web)
+COPY patches/initializer.js node_modules/@open-wa/wa-automate/dist/controllers/initializer.js
+COPY patches/config/puppeteer.config.js node_modules/@open-wa/wa-automate/dist/config/puppeteer.config.js
+
 EXPOSE 8080
 
 ENV HOST=0.0.0.0

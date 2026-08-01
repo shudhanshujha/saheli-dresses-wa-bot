@@ -1597,10 +1597,12 @@ function seedData() {
 seedData();
 
 /* ---------- INIT ---------- */
-ev.on('qr.main', (data) => {
-  currentQR = data || null;
+ev.on('qr.*', (data, sessionId) => {
+  if (data && typeof data === 'string') {
+    currentQR = data;
+  }
 });
-ev.on('authenticated.main', () => {
+ev.on('authenticated.*', () => {
   currentQR = null;
 });
 

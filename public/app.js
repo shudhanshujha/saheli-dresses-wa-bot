@@ -1400,15 +1400,24 @@ async function poll() {
     }
     const badge = document.getElementById('status-badge');
     const logoutBtn = document.getElementById('logout-btn');
+    const qrPanel = document.getElementById('qr-panel');
+    const qrImg = document.getElementById('qr-img');
     const isConnected = status.connected || status.status === 'ready' || status.status === 'authenticated';
     if (isConnected) {
       badge.className = 'status-dot connected';
       badge.textContent = status.host || status.phone || 'Connected';
       if (logoutBtn) logoutBtn.style.display = 'inline-flex';
+      if (qrPanel) qrPanel.classList.add('hidden');
     } else {
       badge.className = 'status-dot disconnected';
       badge.textContent = 'Disconnected';
       if (logoutBtn) logoutBtn.style.display = 'none';
+      if (qrPanel && status.qr && qrImg) {
+        qrImg.src = status.qr.startsWith('data:') ? status.qr : 'data:image/png;base64,' + status.qr;
+        qrPanel.classList.remove('hidden');
+      } else if (qrPanel) {
+        qrPanel.classList.add('hidden');
+      }
     }
     if (chats.length && state.activeView === 'inbox') {
       const prevSig = chatListSignature;

@@ -1,4 +1,4 @@
-import { create } from '@open-wa/wa-automate';
+import { create, ev } from '@open-wa/wa-automate';
 import express from 'express';
 import http from 'http';
 import path from 'path';
@@ -20,6 +20,7 @@ function writeJSON(name, data) {
 }
 
 let clientInstance = null;
+let currentQR = null;
 
 let supabase = null;
 let supabaseEnabled = false;
@@ -376,6 +377,7 @@ app.get('/api/status', (req, res) => {
   res.json({
     connected: !!clientInstance,
     host: clientInstance?.hostAccountNumber || null,
+    qr: currentQR || null,
     chatsCount: 0,
     contactsCount: 0,
     uptime: clientInstance?._startTime || null,
@@ -1602,6 +1604,13 @@ function seedData() {
 seedData();
 
 /* ---------- INIT ---------- */
+ev.on('qr.main', (data) => {
+  currentQR = data || null;
+});
+ev.on('authenticated.main', () => {
+  currentQR = null;
+});
+
 async function initClient() {
 create({
   sessionId: 'main',
@@ -1616,6 +1625,7 @@ create({
   blockCrashLogs: true,
   logConsole: true,
   disableSpins: true,
+  ezqr: true,
   qrTimeout: 300,
   authTimeout: 300,
   autoReject: true,

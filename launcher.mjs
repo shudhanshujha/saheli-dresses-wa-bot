@@ -214,16 +214,17 @@ async function supabaseInsertWaitlist(contactId, waId, reason, messageId) {
   }
 }
 
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = 'Admin@7545';
+const activeTokens = new Set();
+
 function authMiddleware(req, res, next) {
-  if (!supabaseEnabled) return next();
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'authentication required' });
   const token = auth.slice(7);
-  validateSession(token).then(session => {
-    if (!session) return res.status(401).json({ error: 'invalid or expired session' });
-    req.session = session;
-    next();
-  }).catch(() => res.status(401).json({ error: 'authentication failed' }));
+  if (!activeTokens.has(token)) return res.status(401).json({ error: 'invalid or expired session' });
+  req.session = { users: { username: ADMIN_USERNAME } };
+  next();
 }
 
 const app = express();
@@ -232,33 +233,25 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 /* ---------- AUTH ---------- */
-app.post('/api/login', async (req, res) => {
-  const { password } = req.body;
-  if (!password) return res.status(400).json({ error: 'password required' });
-  if (!supabaseEnabled) return res.status(503).json({ error: 'supabase not configured' });
-  try {
-    const { data: users, error: uErr } = await supabase.from('users').select('*');
-    if (uErr) return res.status(500).json({ error: 'auth check failed' });
-    if (!users || users.length === 0) return res.status(401).json({ error: 'no user configured' });
-    const user = users[0];
-    if (!verifyPassword(password, user.password_hash)) return res.status(401).json({ error: 'invalid password' });
-    const token = generateToken();
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-    const { error: sErr } = await supabase.from('sessions').insert({ user_id: user.id, token, expires_at: expiresAt });
-    if (sErr) return res.status(500).json({ error: 'session creation failed' });
-    res.json({ token, expires_at: expiresAt });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: 'username and password required' });
+  if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'invalid username or password' });
+  }
+  const token = generateToken();
+  activeTokens.add(token);
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  res.json({ token, expires_at: expiresAt });
 });
 
 app.get('/api/session', authMiddleware, (req, res) => {
-  res.json({ authenticated: true, user: req.session?.users?.username || 'admin', expires_at: req.session?.expires_at });
+  res.json({ authenticated: true, user: req.session?.users?.username || 'admin', expires_at: null });
 });
 
 app.post('/api/logout', authMiddleware, async (req, res) => {
   const token = req.headers.authorization?.slice(7);
-  if (token && supabaseEnabled) {
-    try { await supabase.from('sessions').delete().eq('token', token); } catch {}
-  }
+  if (token) activeTokens.delete(token);
   if (clientInstance) {
     try { await clientInstance.kill(); } catch {}
     clientInstance = null;

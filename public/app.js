@@ -50,8 +50,8 @@ async function checkSession() {
   return true;
 }
 
-async function login(password) {
-  const data = await API('/api/login', { method: 'POST', body: JSON.stringify({ password }) });
+async function login(username, password) {
+  const data = await API('/api/login', { method: 'POST', body: JSON.stringify({ username, password }) });
   if (data.error) return data;
   state.token = data.token;
   localStorage.setItem('wa_bot_token', data.token);
@@ -86,10 +86,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const pw = document.getElementById('login-password').value;
+      const un = document.getElementById('login-username').value;
       const errEl = document.getElementById('login-error');
       const btn = document.getElementById('login-btn');
       if (btn) { btn.disabled = true; btn.textContent = 'Signing in...'; }
-      const result = await login(pw);
+      const result = await login(un, pw);
       if (result.error) {
         if (errEl) { errEl.textContent = result.error; errEl.classList.remove('hidden'); }
         if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; }

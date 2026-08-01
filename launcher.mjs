@@ -1680,5 +1680,6 @@ create({
 });
 }
 
-server.listen(8080, () => console.log('Dashboard at http://localhost:8080'));
+const PORT = Number(process.env.PORT || process.env.WA_PORT || 8080);
+server.listen(PORT, () => console.log(`Dashboard at http://localhost:${PORT}`));
 initClient();

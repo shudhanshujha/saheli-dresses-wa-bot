@@ -1,0 +1,798 @@
+[
+  {
+    "id": "ecom-abandoned-cart",
+    "name": "🛒 Ecom — Abandoned Cart",
+    "body": "Hey {{name}}! 👋\nYou left something behind... 👀\n🛒 {{product}} is still waiting in your cart.\n⚠️ Only {{stock}} units left in stock.\n👉 Complete your order before it is gone: {{link}}\nThis deal won't last long! ⏳",
+    "variables": [
+      "name",
+      "product",
+      "stock",
+      "link"
+    ],
+    "createdAt": "2026-07-30T19:50:11.074Z"
+  },
+  {
+    "id": "ecom-order-confirm",
+    "name": "📦 Ecom — Order Confirmed",
+    "body": "✅ Order Confirmed!\nHi {{name}}, your order is on its way to you! 🎉\n📦 Order ID: #{{orderId}}\n🛍️ Items: {{items}}\n📅 Estimated Delivery: {{deliveryDate}}\nTrack your order here 👇\n{{trackLink}}",
+    "variables": [
+      "name",
+      "orderId",
+      "items",
+      "deliveryDate",
+      "trackLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "ecom-shipping",
+    "name": "🚚 Ecom — Shipping Update",
+    "body": "🚚 Your order is on the move, {{name}}!\n📦 Order #{{orderId}} has been shipped.\n🔍 Tracking ID: {{trackingId}}\n📅 Expected by: {{deliveryDate}}\nTrack live here 👇\n{{trackLink}}",
+    "variables": [
+      "name",
+      "orderId",
+      "trackingId",
+      "deliveryDate",
+      "trackLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "ecom-flash-sale",
+    "name": "🔥 Ecom — Flash Sale",
+    "body": "🔥 FLASH SALE ALERT 🔥\nHi {{name}}!\n✨ {{discount}}% OFF on {{product}} — only for the next {{hours}} hours!\n🏷️ Original price: ₹{{originalPrice}}\n💥 Sale price: ₹{{salePrice}}\nShop now before it ends 👇\n{{link}}\nOffer valid while stocks last ✅",
+    "variables": [
+      "name",
+      "discount",
+      "product",
+      "hours",
+      "originalPrice",
+      "salePrice",
+      "link"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "ecom-new-arrival",
+    "name": "🆕 Ecom — New Arrival",
+    "body": "🆕 Just dropped for you, {{name}}!\nWe just added {{product}} to our store and thought of you immediately. 🎯\n⭐ Why you will love it:\n→ {{feature1}}\n→ {{feature2}}\n→ {{feature3}}\n🎁 Use code {{code}} for {{discount}}% off — first 50 orders only!\nGrab yours here 👇\n{{link}}",
+    "variables": [
+      "name",
+      "product",
+      "feature1",
+      "feature2",
+      "feature3",
+      "code",
+      "discount",
+      "link"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "ecom-back-in-stock",
+    "name": "📬 Ecom — Back in Stock",
+    "body": "🎉 Great news, {{name}}!\n{{product}} is finally back in stock! 💥\nWe know you have been waiting — so we are telling you first before it sells out again.\n📦 Limited stock available\n💰 Price: ₹{{price}}\nOrder now before it runs out 👇\n{{link}}",
+    "variables": [
+      "name",
+      "product",
+      "price",
+      "link"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "ecom-review",
+    "name": "⭐ Ecom — Review Request",
+    "body": "Hi {{name}}!\nThank you for purchasing {{product}}. 🙏\nWe would love to hear your thoughts!\n📸 Share a photo of your product and tag us.\n⭐ Leave a review here: {{reviewLink}}\nYour feedback helps us improve! 💙",
+    "variables": [
+      "name",
+      "product",
+      "reviewLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "ecom-order-ready",
+    "name": "✅ Ecom — Order Ready for Pickup",
+    "body": "✅ Your order is ready for pickup, {{name}}!\n📦 Order #{{orderId}} is packed and waiting for you.\n📍 Pickup from: {{storeAddress}}\n⏰ We are open till: {{storeHours}}\nPlease carry your order ID. See you soon! 😊",
+    "variables": [
+      "name",
+      "orderId",
+      "storeAddress",
+      "storeHours"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "edu-course-launch",
+    "name": "🎓 Edu — Course Launch",
+    "body": "🎓 {{name}}, the course you have been waiting for is HERE!\n📚 {{courseName}}\nBy {{instructor}}\n✅ What you will learn:\n→ {{point1}}\n→ {{point2}}\n→ {{point3}}\n🏆 Certificate included\n⏰ Batch starts: {{startDate}}\n💰 Early bird price: ₹{{price}} (Ends {{offerEnds}})\nEnroll now 👇\n{{enrollLink}}",
+    "variables": [
+      "name",
+      "courseName",
+      "instructor",
+      "point1",
+      "point2",
+      "point3",
+      "startDate",
+      "price",
+      "offerEnds",
+      "enrollLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "edu-free-workshop",
+    "name": "🆓 Edu — Free Workshop",
+    "body": "🆓 Free workshop alert, {{name}}!\n🎯 {{workshopTopic}}\nA {{duration}}-hour live session with {{speaker}}\n📅 Date: {{date}}\n⏰ Time: {{time}}\n📍 Platform: {{platform}}\nWhat you will walk away with:\n→ {{takeaway1}}\n→ {{takeaway2}}\n🎟️ Only {{seats}} seats available — it is free!\nRegister now 👇\n{{registerLink}}",
+    "variables": [
+      "name",
+      "workshopTopic",
+      "duration",
+      "speaker",
+      "date",
+      "time",
+      "platform",
+      "takeaway1",
+      "takeaway2",
+      "seats",
+      "registerLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "edu-enrollment",
+    "name": "📝 Edu — Enrollment Confirmed",
+    "body": "🎉 Welcome aboard, {{name}}!\nYou are now enrolled in {{courseName}}!\n📅 Start date: {{startDate}}\n⏰ Timing: {{timing}}\n📍 Mode: {{mode}}\nAccess your materials here 👇\n{{accessLink}}\nWe are excited to have you. Let's get started! 🚀",
+    "variables": [
+      "name",
+      "courseName",
+      "startDate",
+      "timing",
+      "mode",
+      "accessLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "edu-fee-reminder",
+    "name": "💳 Edu — Fee Reminder",
+    "body": "📋 Fee reminder, {{name}}\n💰 Amount due: ₹{{amount}}\n📚 For: {{courseName}}\n📅 Due date: {{dueDate}}\nPay before the due date to avoid a late fee.\nPay now 👇\n{{paymentLink}}\nFor any queries, reply to this message 💬",
+    "variables": [
+      "name",
+      "amount",
+      "courseName",
+      "dueDate",
+      "paymentLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "edu-result",
+    "name": "🏆 Edu — Result & Upgrade",
+    "body": "🏆 Congratulations on your results, {{name}}!\nYou scored {{percentage}}% — you are in the top {{rank}}% of your batch! 🎉\nReady to go further? 💪\n🚀 {{nextCourse}} — the next level programme\n→ {{feature1}}\n→ {{feature2}}\n→ Placement support included ✅\n💰 Special upgrade price: ₹{{price}} (Only for existing students)\nUpgrade now 👇\n{{link}}",
+    "variables": [
+      "name",
+      "percentage",
+      "rank",
+      "nextCourse",
+      "feature1",
+      "feature2",
+      "price",
+      "link"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "edu-assignment",
+    "name": "📚 Edu — Assignment Reminder",
+    "body": "📚 Assignment reminder, {{name}}!\n📝 {{assignmentTitle}} is due on {{dueDate}}.\n📋 Submission instructions: {{instructions}}\nSubmit here 👇\n{{submitLink}}\nLate submissions will incur a penalty. ⏰",
+    "variables": [
+      "name",
+      "assignmentTitle",
+      "dueDate",
+      "instructions",
+      "submitLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "fin-payment-confirm",
+    "name": "✅ Finance — Payment Received",
+    "body": "✅ Payment Received!\nHi {{name}},\nYour payment of ₹{{amount}} has been received successfully. 🎉\n📋 Reference: {{reference}}\n📅 Date: {{date}}\n📄 Download receipt: {{receiptLink}}\nThank you for your trust! 🙏",
+    "variables": [
+      "name",
+      "amount",
+      "reference",
+      "date",
+      "receiptLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "fin-loan-approval",
+    "name": "🏦 Finance — Loan Approved",
+    "body": "🎉 Congratulations, {{name}}!\nYour {{loanType}} loan of ₹{{amount}} has been approved! ✅\n📊 Interest rate: {{interestRate}}% p.a.\n📅 Tenure: {{tenure}} months\n💰 EMI: ₹{{emi}}/month\n⚡ Funds will be disbursed within {{disbursalTime}} hours.\nContact your relationship manager {{managerName}} ({{managerPhone}}) for next steps. 📞",
+    "variables": [
+      "name",
+      "loanType",
+      "amount",
+      "interestRate",
+      "tenure",
+      "emi",
+      "disbursalTime",
+      "managerName",
+      "managerPhone"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "fin-otp",
+    "name": "🔐 Finance — OTP Verification",
+    "body": "🔐 Security Alert\n{{otp}} is your one-time password for {{purpose}}.\n⏳ Valid for {{validity}} minutes only.\n⚠️ Do NOT share this OTP with anyone — not even our team.\nIf you didn't request this, please contact us immediately. 🚨",
+    "variables": [
+      "otp",
+      "purpose",
+      "validity"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "fin-policy-renewal",
+    "name": "🛡️ Insurance — Policy Renewal",
+    "body": "⚠️ Action required, {{name}}!\nYour {{policyName}} policy expires on {{expiryDate}}.\n🛡️ Policy #: {{policyNumber}}\n💰 Renewal premium: ₹{{premium}}\nRenew now to stay covered without a break 👇\n{{renewLink}}\nCoverage gap can affect your future claims ⚠️",
+    "variables": [
+      "name",
+      "policyName",
+      "expiryDate",
+      "policyNumber",
+      "premium",
+      "renewLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "fin-investment",
+    "name": "📈 Finance — Investment Opportunity",
+    "body": "📈 {{name}}, your money could be working harder.\n💡 {{schemeName}} — a {{returns}}% p.a. return plan designed for people like you.\n✅ Why {{company}}:\n→ {{point1}}\n→ {{point2}}\n→ SEBI registered ✅\n→ Starting at just ₹{{minAmount}}/month\n🎯 Free consultation — no commitment.\nTalk to our advisor 👇\n{{advisorLink}}",
+    "variables": [
+      "name",
+      "schemeName",
+      "returns",
+      "company",
+      "point1",
+      "point2",
+      "minAmount",
+      "advisorLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "fin-insurance-claim",
+    "name": "📋 Insurance — Claim Update",
+    "body": "📋 Claim Update, {{name}}!\n🆔 Claim ID: {{claimId}}\n📌 Status: {{status}}\n📅 Last updated: {{date}}\n💰 Approved amount: ₹{{amount}}\n📄 Download claim documents: {{docLink}}\nFor queries, reply to this message or call {{supportPhone}}.",
+    "variables": [
+      "name",
+      "claimId",
+      "status",
+      "date",
+      "amount",
+      "docLink",
+      "supportPhone"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "health-appointment",
+    "name": "🩺 Health — Appointment Confirmed",
+    "body": "✅ Appointment Confirmed!\nHi {{name}}! 👋\n🩺 Doctor: Dr. {{doctorName}}\n📅 Date: {{date}}\n⏰ Time: {{time}}\n📍 Location: {{location}}\nReply YES to confirm or NO to reschedule.\nPlease arrive 10 minutes early 🙏",
+    "variables": [
+      "name",
+      "doctorName",
+      "date",
+      "time",
+      "location"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "health-lab-report",
+    "name": "🔬 Health — Lab Report Ready",
+    "body": "🔬 Your reports are ready, {{name}}!\nYour {{testType}} lab report is now available.\n📋 Report Date: {{reportDate}}\nDownload securely here 👇\n{{downloadLink}}\nFor any queries, reply to this message 💬",
+    "variables": [
+      "name",
+      "testType",
+      "reportDate",
+      "downloadLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "health-checkup-offer",
+    "name": "💊 Health — Checkup Offer",
+    "body": "💊 Your health can't wait, {{name}}!\nDon't put off what matters most. 🩺\n🏥 {{packageName}} Full Body Checkup is now available at\n₹{{originalPrice}} ➡️ ₹{{offerPrice}} only!\n✅ Includes:\n→ {{test1}}\n→ {{test2}}\n→ {{test3}}\n📅 Only {{slots}} slots left this week.\nBook now 👇\n{{bookLink}}",
+    "variables": [
+      "name",
+      "packageName",
+      "originalPrice",
+      "offerPrice",
+      "test1",
+      "test2",
+      "test3",
+      "slots",
+      "bookLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "health-prescription",
+    "name": "💊 Health — Prescription Ready",
+    "body": "✅ Your prescription is ready, {{name}}!\n💊 Prescription #{{prescriptionId}} is packed and waiting for you.\n📍 Pickup from: {{pharmacy}}\n⏰ Store hours: {{storeHours}}\nPlease carry a valid ID for pickup 🪪",
+    "variables": [
+      "name",
+      "prescriptionId",
+      "pharmacy",
+      "storeHours"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "health-refill",
+    "name": "⏰ Health — Refill Reminder",
+    "body": "⏰ Refill reminder, {{name}}!\nYour {{medication}} prescription is due for refill on {{refillDate}}.\nDon't miss a dose! 💊\nReply REFILL to reorder in one tap ✅\nYour health is our priority 🌿",
+    "variables": [
+      "name",
+      "medication",
+      "refillDate"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "health-seasonal",
+    "name": "⚠️ Health — Seasonal Alert",
+    "body": "⚠️ {{season}} season is here, {{name}}!\nDon't wait for symptoms to appear. 🤒\n🛡️ Protect yourself with:\n→ {{precaution1}}\n→ {{precaution2}}\n→ {{precaution3}}\n📍 Available at {{clinicName}}\n💊 Consult our doctors today — no waiting!\nBook a free consultation 👇\n{{bookLink}}",
+    "variables": [
+      "name",
+      "season",
+      "precaution1",
+      "precaution2",
+      "precaution3",
+      "clinicName",
+      "bookLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "re-new-listing",
+    "name": "🏠 Realty — New Listing",
+    "body": "🏠 {{name}}, this one just listed — and it won't last!\n📍 {{bhk}} BHK in {{location}}\n💰 Starting at ₹{{price}}\n✨ Highlights:\n→ Corner unit with {{view}}\n→ Ready to move in\n→ {{sqft}} sq ft | {{floor}} floor\n→ {{facing}}\n⚠️ Only {{units}} units available at this price.\nBook a site visit today 👇\n{{visitLink}}",
+    "variables": [
+      "name",
+      "bhk",
+      "location",
+      "price",
+      "view",
+      "sqft",
+      "floor",
+      "facing",
+      "units",
+      "visitLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "re-price-drop",
+    "name": "📉 Realty — Price Drop",
+    "body": "🔥 Price drop alert, {{name}}!\nThe property you were eyeing just got more affordable. 👀\n🏡 {{propertyName}}\n📍 {{location}}\n₹{{oldPrice}} ➡️ ₹{{newPrice}}\n💰 You save ₹{{savings}}!\n⏳ This revised price is valid only till {{validTill}}.\nSchedule your visit now 👇\n{{visitLink}}",
+    "variables": [
+      "name",
+      "propertyName",
+      "location",
+      "oldPrice",
+      "newPrice",
+      "savings",
+      "validTill",
+      "visitLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "re-site-visit",
+    "name": "✅ Realty — Site Visit Confirmed",
+    "body": "✅ Site visit confirmed, {{name}}!\n🏠 Property: {{propertyName}}\n📅 Date: {{date}}\n⏰ Time: {{time}}\n📍 Address: {{address}}\nOur representative {{agentName}} ({{agentPhone}}) will be there to assist you.\nReply if you need to reschedule 📞",
+    "variables": [
+      "name",
+      "propertyName",
+      "date",
+      "time",
+      "address",
+      "agentName",
+      "agentPhone"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "re-payment-reminder",
+    "name": "📋 Realty — Payment Reminder",
+    "body": "📋 Payment reminder, {{name}}\nYour instalment for {{propertyName}} is due on {{dueDate}}.\n💰 Amount: ₹{{amount}}\n🏦 Reference: {{reference}}\nPay now to avoid late charges 👇\n{{paymentLink}}\nFor payment queries, reply to this message 💬",
+    "variables": [
+      "name",
+      "propertyName",
+      "dueDate",
+      "amount",
+      "reference",
+      "paymentLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "re-investment",
+    "name": "📈 Realty — Investment Opportunity",
+    "body": "📈 {{name}}, smart investors are already moving on this.\n🏢 {{projectName}} — a pre-launch opportunity in {{location}}\n💰 Pre-launch price: ₹{{price}} per sq ft\n(Expected post-launch: ₹{{expectedPrice}})\n📊 Why now:\n→ {{roi}}% appreciation in last 2 years\n→ {{connectivity}} connectivity coming by {{year}}\n→ RERA approved ✅\n🎯 Limited units. No brokerage.\nTalk to our advisor 👇\n{{advisorLink}}",
+    "variables": [
+      "name",
+      "projectName",
+      "location",
+      "price",
+      "expectedPrice",
+      "roi",
+      "connectivity",
+      "year",
+      "advisorLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "travel-booking",
+    "name": "✈️ Travel — Booking Confirmed",
+    "body": "✅ Booking confirmed, {{name}}!\nYour trip is officially on! 🎉\n✈️ Destination: {{destination}}\n📅 Travel dates: {{startDate}} → {{endDate}}\n🏨 Hotel: {{hotelName}}\n🔖 Booking ID: {{bookingId}}\nView full itinerary 👇\n{{itineraryLink}}\nHave a wonderful trip! 🌟",
+    "variables": [
+      "name",
+      "destination",
+      "startDate",
+      "endDate",
+      "hotelName",
+      "bookingId",
+      "itineraryLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "travel-flight-reminder",
+    "name": "✈️ Travel — Flight Reminder",
+    "body": "✈️ Flight reminder, {{name}}!\nYour flight is tomorrow — here is what you need:\n🛫 Flight: {{flightNumber}}\n⏰ Departure: {{departureTime}}\n📍 From: {{from}} | Terminal {{terminal}}\n🎫 PNR: {{pnr}}\nCheck in online now 👇\n{{checkinLink}}\nReach the airport at least 2 hours early ⏰",
+    "variables": [
+      "name",
+      "flightNumber",
+      "departureTime",
+      "from",
+      "terminal",
+      "pnr",
+      "checkinLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "travel-exclusive-deal",
+    "name": "🌴 Travel — Exclusive Deal",
+    "body": "✈️ {{name}}, picture this...\nYou. {{destination}}. This {{season}}. 🌅\n🏨 {{nights}} nights at {{hotelName}}\n✈️ Flights included\n🍽️ Breakfast included\n💰 Starting at just ₹{{price}} per person (Regular price: ₹{{regularPrice}})\n⚠️ Only {{packagesLeft}} packages left at this price.\nBook before it's gone 👇\n{{bookLink}}",
+    "variables": [
+      "name",
+      "destination",
+      "season",
+      "nights",
+      "hotelName",
+      "price",
+      "regularPrice",
+      "packagesLeft",
+      "bookLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "travel-hotel-checkin",
+    "name": "🏨 Travel — Hotel Check-in Info",
+    "body": "🏨 Check-in info, {{name}}!\nYour stay at {{hotelName}} starts tomorrow.\n📍 Address: {{address}}\n⏰ Check-in: {{checkInTime}} | Check-out: {{checkOutTime}}\n🔑 Booking ID: {{bookingId}}\n📞 Hotel Contact: {{hotelPhone}}\nAmenities: {{amenities}}\nHave a relaxing stay! 🌟",
+    "variables": [
+      "name",
+      "hotelName",
+      "address",
+      "checkInTime",
+      "checkOutTime",
+      "bookingId",
+      "hotelPhone",
+      "amenities"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "travel-group-deal",
+    "name": "👨‍👩‍👧‍👦 Travel — Group Offer",
+    "body": "👨‍👩‍👧‍👦 Planning a trip with your people, {{name}}?\nBook {{minTravellers}} or more travellers and get:\n✅ {{groupDiscount}}% group discount\n✅ Free airport transfers\n✅ Dedicated trip coordinator\n✅ Flexible cancellation\n🌍 Destination: {{destination}}\n📅 Available dates: {{dates}}\nGet a custom quote 👇\n{{quoteLink}}",
+    "variables": [
+      "name",
+      "minTravellers",
+      "groupDiscount",
+      "destination",
+      "dates",
+      "quoteLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "auto-test-drive",
+    "name": "🚘 Auto — Test Drive Confirmed",
+    "body": "✅ Test drive confirmed, {{name}}!\n🚘 Car: {{carModel}}\n📅 Date: {{date}}\n⏰ Time: {{time}}\n📍 Showroom: {{showroomName}}\nOur executive {{executiveName}} will have it ready for you.\nCarry your driving licence 🪪\nReply if you need to reschedule 📞",
+    "variables": [
+      "name",
+      "carModel",
+      "date",
+      "time",
+      "showroomName",
+      "executiveName"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "auto-new-model",
+    "name": "🚘 Auto — New Model Launch",
+    "body": "🚘 {{name}}, the wait is over.\nThe all-new {{carModel}} has arrived at {{showroom}} — and it drives unlike anything you've felt before. 🔥\n⚡ What's new:\n→ {{feature1}}\n→ {{feature2}}\n→ {{feature3}}\n🎯 Book a free test drive and feel the difference yourself.\n📅 Slots available from {{availableDate}}\nReserve your slot 👇\n{{bookLink}}",
+    "variables": [
+      "name",
+      "carModel",
+      "showroom",
+      "feature1",
+      "feature2",
+      "feature3",
+      "availableDate",
+      "bookLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "auto-service",
+    "name": "🔧 Auto — Service Reminder",
+    "body": "🔧 Service reminder, {{name}}!\nYour {{carModel}} is due for a service. 🚗\n📅 Recommended by: {{recommendedDate}}\n🔢 Current KMs: {{currentKm}}\nBook your service slot now to avoid longer wait times 👇\n{{bookLink}}\nRegular service keeps your car running better, longer ✅",
+    "variables": [
+      "name",
+      "carModel",
+      "recommendedDate",
+      "currentKm",
+      "bookLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "auto-exchange",
+    "name": "🔄 Auto — Exchange Offer",
+    "body": "🔄 Time to upgrade, {{name}}!\nExchange your old car and drive home in a {{carModel}} today! 🚗✨\n💰 Exchange bonus: up to ₹{{bonus}}\n➕ Additional discount: ₹{{discount}}\n🏦 EMI starting at ₹{{emi}}/month\n📍 Visit us at {{showroom}} for a free car evaluation.\n⏳ Offer valid till {{validTill}}\nBook evaluation 👇\n{{bookLink}}",
+    "variables": [
+      "name",
+      "carModel",
+      "bonus",
+      "discount",
+      "emi",
+      "showroom",
+      "validTill",
+      "bookLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "auto-festival",
+    "name": "🎊 Auto — Festival Offer",
+    "body": "🎊 Happy {{festival}}, {{name}}!\nDrive into the season with our {{offerName}} Offer 🚗\n💰 Benefits worth ₹{{benefitsValue}}:\n→ ₹{{cashDiscount}} cash discount\n→ Free {{freebie}}\n→ {{emiReduction}}% lower EMI for {{emiMonths}} months\n→ Free {{extras}}\n⏳ Valid till {{validTill}} only\nBook now 👇\n{{bookLink}}",
+    "variables": [
+      "name",
+      "festival",
+      "offerName",
+      "benefitsValue",
+      "cashDiscount",
+      "freebie",
+      "emiReduction",
+      "emiMonths",
+      "extras",
+      "validTill",
+      "bookLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "beauty-appointment",
+    "name": "💅 Beauty — Appointment Confirmed",
+    "body": "✅ Appointment confirmed, {{name}}!\n💅 Service: {{serviceName}}\n👩‍💼 Stylist: {{stylistName}}\n📅 Date: {{date}}\n⏰ Time: {{time}}\n📍 At: {{salonName}}\nPlease arrive 5 minutes early ✨\nReply CANCEL if plans change 📞",
+    "variables": [
+      "name",
+      "serviceName",
+      "stylistName",
+      "date",
+      "time",
+      "salonName"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "beauty-membership",
+    "name": "👑 Beauty — Membership Offer",
+    "body": "👑 Become a VIP member, {{name}}!\nJoin {{salonName}} Membership and unlock:\n✅ {{discount}}% off on every visit\n✅ Priority booking always\n✅ Free birthday treatment 🎂\n✅ Exclusive member-only offers\n💰 Just ₹{{price}}/month\n🎁 First month FREE if you join before {{offerEnds}}\nJoin now 👇\n{{joinLink}}",
+    "variables": [
+      "name",
+      "salonName",
+      "discount",
+      "price",
+      "offerEnds",
+      "joinLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "beauty-selfcare",
+    "name": "💆‍♀️ Beauty — Self-care Promo",
+    "body": "💆‍♀️ {{name}}, you deserve this.\nBook your {{serviceName}} this week and get {{discount}}% off. ✨\n🌸 What's included:\n→ {{item1}}\n→ {{item2}}\n→ {{item3}}\n⏰ Duration: {{duration}} mins\n💰 Price: ₹{{price}} (was ₹{{originalPrice}})\n⚠️ Only {{slots}} slots left this week.\nTap to book yours 👇\n{{bookLink}}",
+    "variables": [
+      "name",
+      "serviceName",
+      "discount",
+      "item1",
+      "item2",
+      "item3",
+      "duration",
+      "price",
+      "originalPrice",
+      "slots",
+      "bookLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "beauty-reminder",
+    "name": "💆‍♀️ Beauty — Appointment Reminder",
+    "body": "💆‍♀️ See you tomorrow, {{name}}!\nJust a reminder about your {{serviceName}} appointment.\n⏰ Time: {{time}}\n📍 At: {{salonName}}\nWe're looking forward to seeing you! 💛\nReply RESCHEDULE if needed 📞",
+    "variables": [
+      "name",
+      "serviceName",
+      "time",
+      "salonName"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "local-order-ready",
+    "name": "✅ Local — Order Ready",
+    "body": "✅ Your order is ready, {{name}}!\n📦 Order #{{orderId}} is packed and waiting for you.\n📍 Pickup from: {{businessName}}\n⏰ We're open till: {{openTill}}\nSee you soon! 😊",
+    "variables": [
+      "name",
+      "orderId",
+      "businessName",
+      "openTill"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "local-loyalty",
+    "name": "💛 Local — Loyalty Offer",
+    "body": "💛 {{name}}, this one's just for you!\nAs one of our most valued regulars, you get {{discount}}% off on {{item}} — this week only. 🎁\n📍 Walk into {{businessName}} and mention this message at the counter.\n⏳ Valid till {{validTill}} only.\nNo codes. No hassle. Just walk in! 🙌",
+    "variables": [
+      "name",
+      "discount",
+      "item",
+      "businessName",
+      "validTill"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "local-new-launch",
+    "name": "🆕 Local — New Launch",
+    "body": "🆕 We've been working on something exciting, {{name}}!\nIntroducing {{newItem}} at {{businessName}} 🎊\n🌟 {{description}}\n📅 Launching: {{launchDate}}\n🎁 First {{limit}} customers get: {{offer}}\n📍 Come visit us or order here 👇\n{{link}}\nWe can't wait for you to try it! 😊",
+    "variables": [
+      "name",
+      "newItem",
+      "businessName",
+      "description",
+      "launchDate",
+      "limit",
+      "offer",
+      "link"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "local-festive",
+    "name": "🎉 Local — Festive Special",
+    "body": "🎉 Happy {{festival}}, {{name}}!\nWe're celebrating with you! 🎊\n✨ Festive Special Offers:\n→ {{item1}} — {{discount1}}% OFF\n→ {{item2}} — {{discount2}}% OFF\n→ {{item3}} — Buy 1 Get 1 FREE\n📍 Visit us at {{businessName}}\n⏳ Valid: {{validFrom}} to {{validTill}} only\nBring the whole family! 👨‍👩‍👧‍👦",
+    "variables": [
+      "name",
+      "festival",
+      "item1",
+      "discount1",
+      "item2",
+      "discount2",
+      "item3",
+      "businessName",
+      "validFrom",
+      "validTill"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "local-feedback",
+    "name": "⭐ Local — Feedback Request",
+    "body": "Hi {{name}}! 👋\nWe hope you enjoyed your experience at {{businessName}}.\nWe'd love your feedback! 💬\n⭐ Rate us: {{ratingLink}}\n📝 Share your thoughts: {{feedbackLink}}\nYour feedback helps us serve you better! 🙏",
+    "variables": [
+      "name",
+      "businessName",
+      "ratingLink",
+      "feedbackLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "gen-welcome",
+    "name": "👋 General — Welcome Message",
+    "body": "Hi {{name}}! 👋\nWelcome to {{businessName}}!\nWe are excited to have you on board. 🎉\nFeel free to reach out if you have any questions.\nHow can we help you today? 💬",
+    "variables": [
+      "name",
+      "businessName"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "gen-support",
+    "name": "🎫 General — Support Ticket",
+    "body": "Hi {{name}},\nWe received your support request (#{{ticketId}}).\nOur team will get back to you within {{responseTime}} hours.\n📌 Issue: {{issueSummary}}\nIn the meantime, you can check FAQs here: {{faqLink}}\nThank you for your patience! 🙏",
+    "variables": [
+      "name",
+      "ticketId",
+      "responseTime",
+      "issueSummary",
+      "faqLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "gen-birthday",
+    "name": "🎂 General — Birthday Wish",
+    "body": "🎂🎉 Happy Birthday, {{name}}! 🎉🎂\nFrom all of us at {{businessName}}, we wish you an amazing day filled with joy and laughter! 🥳\n🎁 As a special gift, here's {{offer}} just for you!\nValid till {{validTill}}. Show this message at our store or use code {{code}} online.\nEnjoy your special day! 🎈",
+    "variables": [
+      "name",
+      "businessName",
+      "offer",
+      "validTill",
+      "code"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "gen-referral",
+    "name": "🤝 General — Referral Program",
+    "body": "🤝 {{name}}, refer a friend and both of you win!\nShare {{businessName}} with your friends and:\n🎁 You get: {{rewardYou}}\n🎁 They get: {{rewardFriend}}\n📋 How to refer:\nJust share your unique referral link: {{referralLink}}\n⏳ Offer valid till {{validTill}}\nShare now and save! 🎉",
+    "variables": [
+      "name",
+      "businessName",
+      "rewardYou",
+      "rewardFriend",
+      "referralLink",
+      "validTill"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  },
+  {
+    "id": "gen-event-invite",
+    "name": "📅 General — Event Invitation",
+    "body": "🎊 You're invited, {{name}}!\n{{businessName}} is hosting {{eventName}} 🎉\n📅 Date: {{date}}\n⏰ Time: {{time}}\n📍 Venue: {{venue}}\n✨ Highlights:\n→ {{highlight1}}\n→ {{highlight2}}\n→ {{highlight3}}\n🎟️ RSVP here: {{rsvpLink}}\nSee you there! 🥳",
+    "variables": [
+      "name",
+      "businessName",
+      "eventName",
+      "date",
+      "time",
+      "venue",
+      "highlight1",
+      "highlight2",
+      "highlight3",
+      "rsvpLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.085Z"
+  }
+]

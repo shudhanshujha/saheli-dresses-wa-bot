@@ -1,0 +1,101 @@
+[
+  {
+    "id": "ct-holiday",
+    "name": "🎄 Holiday Greeting Campaign",
+    "message": "🎄 Wishing you and your family a wonderful holiday season! Thank you for being a valued customer. May the new year bring you joy and prosperity! 🥂",
+    "targetType": "all",
+    "targetFilter": "",
+    "createdAt": "2026-07-30T19:50:11.088Z"
+  },
+  {
+    "id": "ct-promo",
+    "name": "🔥 Flash Sale Campaign",
+    "message": "🔥 Flash Sale! Get {{discount}}% off on all products this weekend only. Use code {{code}} at checkout. Visit our store or reply for details! ⏳",
+    "targetType": "all",
+    "targetFilter": "",
+    "variables": [
+      "discount",
+      "code"
+    ],
+    "createdAt": "2026-07-30T19:50:11.088Z"
+  },
+  {
+    "id": "ct-feedback",
+    "name": "⭐ Customer Feedback Campaign",
+    "message": "Hi {{name}}, we would love to hear about your recent experience with us. Reply with your feedback or rate us 1-5 ⭐",
+    "targetType": "all",
+    "targetFilter": "",
+    "variables": [
+      "name"
+    ],
+    "createdAt": "2026-07-30T19:50:11.088Z"
+  },
+  {
+    "id": "ct-reengage",
+    "name": "💛 Re-engagement Campaign",
+    "message": "Hey {{name}}, we miss you! Here's a special {{discount}}% discount on your next purchase. Use code: {{code}}. Valid till {{expiry}}. 🎉",
+    "targetType": "all",
+    "targetFilter": "",
+    "variables": [
+      "name",
+      "discount",
+      "code",
+      "expiry"
+    ],
+    "createdAt": "2026-07-30T19:50:11.088Z"
+  },
+  {
+    "id": "ct-abandoned-cart",
+    "name": "🛒 Abandoned Cart Recovery",
+    "message": "Hi {{name}}! You left items in your cart. Complete your purchase now and get {{discount}}% off. Shop here: {{link}}",
+    "targetType": "all",
+    "targetFilter": "",
+    "variables": [
+      "name",
+      "discount",
+      "link"
+    ],
+    "createdAt": "2026-07-30T19:50:11.088Z"
+  },
+  {
+    "id": "ct-new-year",
+    "name": "🎆 New Year Campaign",
+    "message": "🎆 Happy New Year {{name}}! Thank you for being part of our journey. Here's to an amazing year ahead! Use code {{code}} for {{discount}}% off your first purchase this year. 🥳",
+    "targetType": "all",
+    "targetFilter": "",
+    "variables": [
+      "name",
+      "code",
+      "discount"
+    ],
+    "createdAt": "2026-07-30T19:50:11.088Z"
+  },
+  {
+    "id": "ct-birthday",
+    "name": "🎂 Birthday Campaign",
+    "message": "🎂 Happy Birthday {{name}}! 🎉 As a special gift, enjoy {{discount}}% off on us. Show this message in-store or use code {{code}} online. Valid till {{expiry}}! 🎁",
+    "targetType": "all",
+    "targetFilter": "",
+    "variables": [
+      "name",
+      "discount",
+      "code",
+      "expiry"
+    ],
+    "createdAt": "2026-07-30T19:50:11.088Z"
+  },
+  {
+    "id": "ct-event",
+    "name": "📅 Event Invitation Campaign",
+    "message": "🎊 You're invited {{name}}! Join us at {{eventName}} on {{date}}. Limited seats available — RSVP here: {{rsvpLink}}",
+    "targetType": "all",
+    "targetFilter": "",
+    "variables": [
+      "name",
+      "eventName",
+      "date",
+      "rsvpLink"
+    ],
+    "createdAt": "2026-07-30T19:50:11.088Z"
+  }
+]

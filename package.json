@@ -1,0 +1,33 @@
+{
+  "name": "openwa-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp bot with AI, webhooks, plugins, and MCP support via OpenWA",
+  "type": "module",
+  "scripts": {
+    "start": "node src/main.mjs",
+    "api": "npx @open-wa/wa-automate --config ./wa.config.mjs",
+    "webhook": "node src/webhook-receiver.mjs",
+    "dev": "node --watch src/main.mjs"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "openwa",
+    "chatbot",
+    "ai"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@open-wa/plugin-sdk": "^5.0.0-alpha.8",
+    "@open-wa/wa-automate": "^4.76.0",
+    "@supabase/supabase-js": "^2.111.0",
+    "dotenv": "^17.4.2",
+    "express": "^4.22.2",
+    "node-cron": "^4.6.0",
+    "puppeteer": "^23.11.1",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "whatsapp-web.js": "^1.34.0"
+  }
+}

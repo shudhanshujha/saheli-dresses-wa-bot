@@ -1,0 +1,17 @@
+node_modules/
+.env
+session-data/
+.wwebjs_auth/
+.wwebjs_cache/
+contacts.json
+*.log
+scratch/
+*.postman_collection.json
+*.sw_col.json
+whatsapp.png
+
+# managed
+**.data.json
+**.node-persist**
+**_IGNORE_**
+# end managed

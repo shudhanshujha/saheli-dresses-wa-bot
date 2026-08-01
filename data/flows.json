@@ -1,0 +1,183 @@
+[
+  {
+    "id": "flow-support",
+    "name": "Customer Support",
+    "trigger": "help",
+    "active": true,
+    "createdAt": "2026-07-30T19:50:11.087Z",
+    "steps": [
+      {
+        "id": "fs1",
+        "type": "send",
+        "message": "Hi! 👋 Welcome to support.\n\nPlease select an option:\n1️⃣ Order Issue\n2️⃣ Product Inquiry\n3️⃣ Speak to Agent\n\nReply with 1, 2, or 3."
+      },
+      {
+        "id": "fs2",
+        "type": "wait",
+        "conditions": [
+          {
+            "match": "1",
+            "thenStep": "fs3"
+          },
+          {
+            "match": "2",
+            "thenStep": "fs4"
+          },
+          {
+            "match": "3",
+            "thenStep": "fs5"
+          }
+        ]
+      },
+      {
+        "id": "fs3",
+        "type": "send",
+        "message": "We are sorry about the issue! Please share your order ID and we will look into it right away."
+      },
+      {
+        "id": "fs4",
+        "type": "send",
+        "message": "Sure! Tell us which product you are interested in and we will share all the details."
+      },
+      {
+        "id": "fs5",
+        "type": "send",
+        "message": "Connecting you to a live agent. Please hold on — someone will be with you shortly."
+      },
+      {
+        "id": "fs6",
+        "type": "end"
+      }
+    ]
+  },
+  {
+    "id": "flow-hours",
+    "name": "Business Hours",
+    "trigger": "hours",
+    "active": true,
+    "createdAt": "2026-07-30T19:50:11.087Z",
+    "steps": [
+      {
+        "id": "fh1",
+        "type": "send",
+        "message": "🕐 Our Business Hours:\n\nMon–Fri: 9:00 AM – 8:00 PM\nSaturday: 10:00 AM – 6:00 PM\nSunday: Closed\n\nFor urgent queries, reply \"urgent\" and we will get back to you ASAP."
+      },
+      {
+        "id": "fh2",
+        "type": "wait"
+      },
+      {
+        "id": "fh3",
+        "type": "send",
+        "message": "Noted! We have flagged this as urgent. Our team will reach out within 30 minutes. Thank you for your patience!"
+      },
+      {
+        "id": "fh4",
+        "type": "end"
+      }
+    ]
+  },
+  {
+    "id": "flow-feedback",
+    "name": "Collect Feedback",
+    "trigger": "feedback",
+    "active": true,
+    "createdAt": "2026-07-30T19:50:11.087Z",
+    "steps": [
+      {
+        "id": "ff1",
+        "type": "send",
+        "message": "We value your feedback! 🎯\n\nHow would you rate your experience?\n⭐ 1 — Poor\n⭐ 2 — Fair\n⭐ 3 — Good\n⭐ 4 — Great\n⭐ 5 — Excellent\n\nReply with a number 1–5."
+      },
+      {
+        "id": "ff2",
+        "type": "wait",
+        "conditions": [
+          {
+            "match": "1",
+            "thenStep": "ff3"
+          },
+          {
+            "match": "2",
+            "thenStep": "ff3"
+          },
+          {
+            "match": "3",
+            "thenStep": "ff4"
+          },
+          {
+            "match": "4",
+            "thenStep": "ff5"
+          },
+          {
+            "match": "5",
+            "thenStep": "ff5"
+          }
+        ]
+      },
+      {
+        "id": "ff3",
+        "type": "send",
+        "message": "We are sorry to hear that! 😔 We want to make it right. Please share what went wrong so we can improve."
+      },
+      {
+        "id": "ff4",
+        "type": "send",
+        "message": "Thank you for your feedback! 😊 We are always working to get better. Let us know how we can improve further."
+      },
+      {
+        "id": "ff5",
+        "type": "send",
+        "message": "Wow, thank you for the 5-star rating! 🌟 We are thrilled you had a great experience. Share us with your friends! 🎉"
+      },
+      {
+        "id": "ff6",
+        "type": "end"
+      }
+    ]
+  },
+  {
+    "id": "flow-order",
+    "name": "Order Status",
+    "trigger": "order",
+    "active": true,
+    "createdAt": "2026-07-30T19:50:11.087Z",
+    "steps": [
+      {
+        "id": "fo1",
+        "type": "send",
+        "message": "📦 Track Your Order\n\nPlease share your Order ID so we can check the status for you."
+      },
+      {
+        "id": "fo2",
+        "type": "wait",
+        "conditions": [
+          {
+            "matchType": "contains",
+            "match": "#",
+            "thenStep": "fo3"
+          },
+          {
+            "matchType": "contains",
+            "match": "ord",
+            "thenStep": "fo3"
+          }
+        ]
+      },
+      {
+        "id": "fo3",
+        "type": "send",
+        "message": "Thank you! Let me look up your order. 🔍\nOne moment please..."
+      },
+      {
+        "id": "fo4",
+        "type": "send",
+        "message": "✅ Your order is currently being processed.\n📅 Expected delivery: 3–5 business days.\n\nNeed more help? Reply \"help\" to speak to support."
+      },
+      {
+        "id": "fo5",
+        "type": "end"
+      }
+    ]
+  }
+]

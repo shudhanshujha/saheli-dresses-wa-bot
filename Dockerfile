@@ -45,4 +45,4 @@ EXPOSE 8080
 
 ENV HOST=0.0.0.0
 
-CMD ["node", "launcher.mjs"]
+CMD ["node", "src/main.mjs"]

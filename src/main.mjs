@@ -226,24 +226,50 @@ let client = null;
 let manualLogout = false;
 let logoutInProgress = false;
 
+function resolveChromiumPath() {
+  if (process.env.PUPPETEER_EXECUTABLE_PATH && fs.existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) return process.env.PUPPETEER_EXECUTABLE_PATH;
+  if (process.platform === 'linux') {
+    try {
+      const found = execSync('which chromium || which chromium-browser || which google-chrome || which google-chrome-stable 2>/dev/null', { encoding: 'utf8' }).trim().split('\n')[0];
+      if (found && fs.existsSync(found)) return found;
+    } catch {}
+  }
+  const candidates = [
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/usr/lib/chromium/chromium',
+    '/usr/lib/chromium-browser/chromium-browser',
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+  ];
+  for (const c of candidates) { if (fs.existsSync(c)) return c; }
+  return undefined;
+}
+
 function initClient() {
+  const chromiumExecutable = resolveChromiumPath();
+  console.log('[Puppeteer] Launching browser using executable:', chromiumExecutable || 'bundled chromium');
+
   client = new Client({
     puppeteer: {
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
         '--disable-gpu',
+        '--disable-extensions',
       ],
+      ...(chromiumExecutable ? { executablePath: chromiumExecutable } : {}),
       headless: true,
     },
-    authStrategy: new LocalAuth({ clientId: 'main' }),
-    qrMaxRetries: 5,
+    authStrategy: new LocalAuth({ clientId: 'main', dataPath: process.env.WA_USER_DATA_DIR || './session-data' }),
+    qrMaxRetries: 10,
     takeoverOnConflict: true,
-    // Local cache: loads live WhatsApp Web, then caches the bundle for fast, offline-friendly restarts
     webVersionCache: {
-      type: 'local',
-      strict: false,
+      type: 'remote',
+      remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1014164287-alpha.html',
     },
   });
 

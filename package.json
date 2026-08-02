@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/main.mjs",
     "start:launcher": "node launcher.mjs",
-    "api": "npx @open-wa/wa-automate --config ./wa.config.mjs",
+    "api": "node src/main.mjs",
     "webhook": "node src/webhook-receiver.mjs",
     "dev": "node --watch src/main.mjs"
   },

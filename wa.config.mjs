@@ -12,6 +12,17 @@ export default defineConfig({
   headless: true,
   qrTimeout: 0,
   authTimeout: 120,
+  chromiumArgs: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-accelerated-2d-canvas',
+    '--no-first-run',
+    '--disable-gpu',
+    '--disable-extensions',
+    '--disable-default-apps',
+    '--ignore-certificate-errors',
+  ],
 
   plugins: [
     '@open-wa/integration-webhook',

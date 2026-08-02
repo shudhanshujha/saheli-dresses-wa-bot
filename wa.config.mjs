@@ -7,6 +7,7 @@ export default defineConfig({
   licenseKey: process.env.WA_LICENSE_KEY,
   linkCode: process.env.WA_LINK_CODE,
   userDataDir: process.env.WA_USER_DATA_DIR ?? './session-data',
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
   customUserAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.204 Safari/537.36',
   headless: true,
   qrTimeout: 0,

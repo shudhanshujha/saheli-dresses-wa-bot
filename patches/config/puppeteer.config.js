@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.height = exports.width = exports.puppeteerConfig = exports.useragent = exports.createUserAgent = void 0;
 const puppeteerConfig = {
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
     WAUrl: 'https://web.whatsapp.com',
     width: 1440,
     height: 900,

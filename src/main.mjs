@@ -243,7 +243,7 @@ function resolveChromiumPath() {
     '/usr/bin/google-chrome-stable',
   ];
   for (const c of candidates) { if (fs.existsSync(c)) return c; }
-  return undefined;
+  return process.platform === 'linux' ? '/usr/bin/chromium' : undefined;
 }
 
 function initClient() {

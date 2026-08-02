@@ -1777,13 +1777,22 @@ try {
   runBrowserPreflight();
 } catch (e) { console.error('[Preflight] failed:', e.message); }
 
-/* ---------- INIT ---------- */
-ev.on('qr.*', (data, sessionId) => {
-  if (data && typeof data === 'string') {
+const handleQREvent = (data) => {
+  if (!data) return;
+  if (typeof data === 'string') {
     currentQR = data;
+  } else if (typeof data === 'object') {
+    currentQR = data.base64Image || data.qr || data.asciiQR || null;
   }
-});
+};
+ev.on('qr.*', (data) => handleQREvent(data));
+ev.on('qr', (data) => handleQREvent(data));
+ev.on('qr.main', (data) => handleQREvent(data));
 ev.on('authenticated.*', () => {
+  currentQR = null;
+  waReady = true;
+});
+ev.on('authenticated', () => {
   currentQR = null;
   waReady = true;
 });

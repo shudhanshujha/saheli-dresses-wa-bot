@@ -4,10 +4,11 @@
   "description": "WhatsApp bot with AI, webhooks, plugins, and MCP support via OpenWA",
   "type": "module",
   "scripts": {
-    "start": "node src/main.mjs",
+    "start": "node launcher.mjs",
+    "start:wweb": "node src/main.mjs",
     "api": "npx @open-wa/wa-automate --config ./wa.config.mjs",
     "webhook": "node src/webhook-receiver.mjs",
-    "dev": "node --watch src/main.mjs"
+    "dev": "node --watch launcher.mjs"
   },
   "keywords": [
     "whatsapp",

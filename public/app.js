@@ -1430,9 +1430,16 @@ async function poll() {
       badge.className = 'status-dot disconnected';
       badge.textContent = 'Disconnected';
       if (logoutBtn) logoutBtn.style.display = 'none';
+      const getQRImageSrc = (data) => {
+        if (!data) return '';
+        if (typeof data === 'string' && (data.startsWith('data:') || data.startsWith('http://') || data.startsWith('https://'))) {
+          return data;
+        }
+        return 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=' + encodeURIComponent(data);
+      };
       if (qrPanel && qrImg) {
         if (qrData) {
-          qrImg.src = qrData.startsWith('data:') ? qrData : 'data:image/png;base64,' + qrData;
+          qrImg.src = getQRImageSrc(qrData);
           qrPanel.classList.remove('hidden');
         } else {
           qrPanel.classList.add('hidden');
@@ -1440,7 +1447,7 @@ async function poll() {
       }
       if (qrBanner && qrBannerImg) {
         if (qrData) {
-          qrBannerImg.src = qrData.startsWith('data:') ? qrData : 'data:image/png;base64,' + qrData;
+          qrBannerImg.src = getQRImageSrc(qrData);
           qrBanner.classList.remove('hidden');
         } else {
           qrBanner.classList.add('hidden');

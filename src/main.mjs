@@ -1,4 +1,4 @@
-﻿import 'dotenv/config';
+import 'dotenv/config';
 import pkg from 'whatsapp-web.js';
 import express from 'express';
 import fs from 'fs';
@@ -438,11 +438,19 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── API Authentication Middleware ──────────────────────────────────────────────
+const activeTokens = new Set();
+const ADMIN_USERNAME = process.env.DASHBOARD_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.DASHBOARD_PASSWORD || 'Admin@7545';
+
 const authenticate = (req, res, next) => {
-  // Allow public status, verify-auth, and logout
-  if (req.path === '/api/status' || req.path === '/api/verify-auth' || req.path === '/api/logout') return next();
-  // If no API key configured, auth is disabled
+  // Allow public status, verify-auth, login, session, and logout
+  if (req.path === '/api/status' || req.path === '/api/verify-auth' || req.path === '/api/login' || req.path === '/api/session' || req.path === '/api/logout') return next();
+  const auth = req.headers.authorization;
+  if (auth && auth.startsWith('Bearer ')) {
+    const token = auth.slice(7);
+    if (activeTokens.has(token)) return next();
+  }
+  // Fallback to API_KEY if configured
   if (!API_KEY) return next();
   const clientKey = req.headers['x-api-key'] || req.headers['authorization']?.replace('Bearer ', '');
   if (!clientKey || clientKey !== API_KEY) {
@@ -457,6 +465,28 @@ app.use('/api', authenticate);
 app.use('/dashboard', express.static(path.join(__dirname, '../public')));
 // Also serve static assets at root so the dashboard HTML (which references /style.css, /app.js) works
 app.use(express.static(path.join(__dirname, '../public'), { index: false }));
+
+// ── POST /api/login ───────────────────────────────────────────────────────────
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: 'username and password required' });
+  if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'invalid username or password' });
+  }
+  const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+  activeTokens.add(token);
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  res.json({ token, expires_at: expiresAt });
+});
+
+// ── GET /api/session ──────────────────────────────────────────────────────────
+app.get('/api/session', (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'authentication required' });
+  const token = auth.slice(7);
+  if (!activeTokens.has(token)) return res.status(401).json({ error: 'invalid or expired session' });
+  res.json({ authenticated: true, user: ADMIN_USERNAME, expires_at: null });
+});
 
 // ── POST /api/verify-auth — Validate Master Key ────────────────────────────────
 app.post('/api/verify-auth', (req, res) => {

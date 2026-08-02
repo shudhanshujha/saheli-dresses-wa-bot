@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
   libasound2 \
   libatk-bridge2.0-0 \
   libatk1.0-0 \
+  libcairo2 \
   libcups2 \
   libdbus-1-3 \
   libdrm2 \
@@ -14,14 +15,19 @@ RUN apt-get update && apt-get install -y \
   libgtk-3-0 \
   libnspr4 \
   libnss3 \
+  libpango-1.0-0 \
   libxcomposite1 \
   libxdamage1 \
+  libxfixes3 \
+  libxkbcommon0 \
   libxrandr2 \
+  libxshmfence1 \
+  libxss1 \
+  libwayland-client0 \
   xdg-utils \
   wget \
   && rm -rf /var/lib/apt/lists/*
 
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 WORKDIR /app

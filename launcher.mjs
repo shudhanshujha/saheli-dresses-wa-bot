@@ -23,6 +23,7 @@ let clientInstance = null;
 let currentQR = null;
 let lastError = null;
 let launchAttempts = 0;
+let waReady = false;
 
 let supabase = null;
 let supabaseEnabled = false;
@@ -258,6 +259,7 @@ app.post('/api/logout', authMiddleware, async (req, res) => {
     try { await clientInstance.kill(); } catch {}
     clientInstance = null;
   }
+  waReady = false;
   res.json({ success: true, message: 'Logged out' });
   setTimeout(initClient, 1000);
 });
@@ -317,11 +319,13 @@ app.post('/api/waitlist/:id/resolve', authMiddleware, async (req, res) => {
 
 function escapeXml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
 
-function withRetry(fn, retries = 2) {
+async function withRetry(fn, retries = 2) {
+  let lastErr;
   for (let i = 0; i <= retries; i++) {
-    try { return fn(); }
-    catch (e) { if (i === retries) throw e; }
+    try { return await fn(); }
+    catch (e) { lastErr = e; }
   }
+  throw lastErr;
 }
 
 /* ---------- DAILY SEND LIMIT ---------- */
@@ -373,7 +377,7 @@ setInterval(() => {
 /* ---------- STATUS ---------- */
 app.get('/api/status', (req, res) => {
   res.json({
-    connected: !!clientInstance,
+    connected: !!clientInstance && waReady,
     host: clientInstance?.hostAccountNumber || null,
     qr: currentQR || null,
     chatsCount: 0,
@@ -661,14 +665,25 @@ app.post('/api/broadcast', async (req, res) => {
   res.end();
 });
 
-function flushBroadcastQueue() {
+async function flushBroadcastQueue() {
   if (!clientInstance || !broadcastQueue.length) return;
+  const retries = {};
   while (broadcastQueue.length && getDailySendRemaining() > 0) {
     const batch = broadcastQueue[0];
     const chatId = batch.chatIds.shift();
     if (chatId) {
-      try { sendToChat(chatId, batch.payload); }
-      catch (e) { console.error('[Broadcast queue] send failed:', e.message); }
+      retries[chatId] = (retries[chatId] || 0) + 1;
+      try { await sendToChat(chatId, batch.payload); }
+      catch (e) {
+        console.error('[Broadcast queue] send failed:', chatId, e.message);
+        if (retries[chatId] < 3) {
+          batch.chatIds.push(chatId);
+          batch.retries = retries[chatId];
+        } else {
+          console.error('[Broadcast queue] giving up on', chatId);
+        }
+      }
+      if (broadcastQueue.length > 1) await new Promise(r => setTimeout(r, 2000));
     }
     if (!batch.chatIds.length) broadcastQueue.shift();
     saveBroadcastQueue();
@@ -1030,7 +1045,8 @@ app.post('/api/campaigns', async (req, res) => {
     };
     const campaigns = readJSON('campaigns');
     campaigns.push(campaign); writeJSON('campaigns', campaigns);
-    if (!scheduleAt) executeCampaign(campaign.id);
+    if (scheduleAt) scheduleCampaign(campaign);
+    else executeCampaign(campaign.id);
     res.json(campaign);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -1044,8 +1060,34 @@ app.delete('/api/campaigns/:id', (req, res) => {
   let campaigns = readJSON('campaigns');
   campaigns = campaigns.filter(c => c.id !== req.params.id);
   writeJSON('campaigns', campaigns);
+  if (campaignTimers[req.params.id]) { clearTimeout(campaignTimers[req.params.id]); delete campaignTimers[req.params.id]; }
   res.json({ success: true });
 });
+
+const campaignTimers = {};
+function scheduleCampaign(c) {
+  if (campaignTimers[c.id]) { clearTimeout(campaignTimers[c.id]); delete campaignTimers[c.id]; }
+  if (c.status !== 'scheduled' || !c.scheduleAt) return;
+  const delay = new Date(c.scheduleAt).getTime() - Date.now();
+  if (delay <= 0) {
+    const campaigns = readJSON('campaigns');
+    const found = campaigns.find(x => x.id === c.id);
+    if (found) { found.status = 'running'; writeJSON('campaigns', campaigns); }
+    executeCampaign(c.id);
+    return;
+  }
+  campaignTimers[c.id] = setTimeout(() => {
+    const campaigns = readJSON('campaigns');
+    const found = campaigns.find(x => x.id === c.id);
+    if (found) { found.status = 'running'; writeJSON('campaigns', campaigns); }
+    executeCampaign(c.id);
+    delete campaignTimers[c.id];
+  }, delay);
+}
+function resumeScheduledCampaigns() {
+  const campaigns = readJSON('campaigns');
+  campaigns.filter(c => c.status === 'scheduled' && c.scheduleAt).forEach(c => scheduleCampaign(c));
+}
 
 async function executeCampaign(id) {
   const campaigns = readJSON('campaigns');
@@ -1071,7 +1113,7 @@ async function executeCampaign(id) {
     if (!clientInstance) { c.status = 'cancelled'; writeJSON('campaigns', campaigns); return; }
 
     // daily limit check before each send
-    if (getDailySendCount() >= DAILY_SEND_LIMIT) {
+    if (getTodaySendCount() >= DAILY_SEND_LIMIT) {
       c.status = 'daily_paused';
       c._resumeIndex = i;
       c.progress.total = contacts.length;
@@ -1098,7 +1140,7 @@ function resumeDailyPausedCampaigns() {
   const campaigns = readJSON('campaigns');
   const today = new Date().toISOString().slice(0, 10);
   for (const c of campaigns) {
-    if (c.status === 'daily_paused' && getDailySendCount() < DAILY_SEND_LIMIT) {
+    if (c.status === 'daily_paused' && getTodaySendCount() < DAILY_SEND_LIMIT) {
       executeCampaign(c.id);
     }
   }
@@ -1108,7 +1150,7 @@ function resumeDailyPausedCampaigns() {
 app.get('/api/groups', async (req, res) => {
   if (!clientInstance) return res.status(503).json({ error: 'not connected' });
   try {
-    const chats = await withRetry(() => clientInstance.getAllChats());
+    const chats = (await withRetry(() => clientInstance.getAllChats())) || [];
     const groups = chats.filter(c => c.isGroup);
     const result = [];
     for (const g of groups.slice(0, 50)) {
@@ -1214,11 +1256,11 @@ function computeNextRun(scheduleAt, recurrence) {
 }
 
 async function executeScheduleItem(item) {
-  if (!clientInstance) return;
+  if (!clientInstance) return { sent: 0, failed: 0 };
   const targets = [];
   if (item.sendToAll) {
     try {
-      const chats = await withRetry(() => clientInstance.getAllChats());
+      const chats = (await withRetry(() => clientInstance.getAllChats())) || [];
       targets.push(...chats.filter(c => !c.isGroup).map(c => c.id._serialized || c.id));
     } catch {}
   } else {
@@ -1492,8 +1534,8 @@ app.get('/api/analytics', async (req, res) => {
       }
       return res.json(base);
     }
-    const chats = await withRetry(() => clientInstance.getAllChats());
-    const contacts = await withRetry(() => clientInstance.getAllContacts());
+    const chats = (await withRetry(() => clientInstance.getAllChats())) || [];
+    const contacts = (await withRetry(() => clientInstance.getAllContacts())) || [];
     base.chats = chats.length; base.contacts = contacts.length; base.groups = chats.filter(c => c.isGroup).length;
     base.messages = chats.reduce((sum, c) => sum + (c.messageCount || 0), 0);
     base.unread = chats.filter(c => c.unreadCount > 0).length;
@@ -1700,6 +1742,7 @@ ev.on('qr.*', (data, sessionId) => {
 });
 ev.on('authenticated.*', () => {
   currentQR = null;
+  waReady = true;
 });
 
 async function initClient() {
@@ -1731,6 +1774,7 @@ create({
   clientInstance = client;
   clientInstance._startTime = Date.now();
   console.log('CLIENT READY!', client.hostAccountNumber);
+  waReady = true;
   initSupabase();
 
   /* resume pending scheduled messages */
@@ -1740,6 +1784,7 @@ create({
   /* resume daily-paused campaigns */
   cleanupDailyLog();
   resumeDailyPausedCampaigns();
+  resumeScheduledCampaigns();
   flushBroadcastQueue();
 
   client.onStateChanged((state) => {
@@ -1747,6 +1792,7 @@ create({
     if (state === 'CONNECTED' && clientInstance) {
       clientInstance._startTime = Date.now();
     }
+    waReady = state === 'CONNECTED';
   });
   client.onMessage(msg => {
     console.log('MSG from', msg.from, ':', (msg.body || '').slice(0, 60));
@@ -1769,6 +1815,7 @@ create({
   launchAttempts++;
   lastError = e?.message || String(e);
   console.error('FAILED:', lastError);
+  waReady = false;
   if (!clientInstance) setTimeout(initClient, 5000);
 });
 }

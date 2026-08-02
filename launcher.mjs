@@ -1739,10 +1739,10 @@ seedData();
 
 /* ---------- BROWSER PREFLIGHT ---------- */
 function resolveChromiumPath() {
-  const candidates = ['/usr/lib/chromium/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable'];
-  for (const c of candidates) { if (fs.existsSync(c)) return c; }
   if (process.env.PUPPETEER_EXECUTABLE_PATH && fs.existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) return process.env.PUPPETEER_EXECUTABLE_PATH;
-  return '/usr/bin/chromium';
+  const candidates = ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/lib/chromium/chromium', '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable'];
+  for (const c of candidates) { if (fs.existsSync(c)) return c; }
+  return undefined;
 }
 
 function runBrowserPreflight() {
@@ -1753,16 +1753,16 @@ function runBrowserPreflight() {
     const totalMem = parseInt(fs.readFileSync('/proc/meminfo', 'utf8').match(/MemTotal:\s+(\d+)/)?.[1] || '0', 10);
     result.memTotalMB = Math.round(totalMem / 1024);
   } catch (e) { result.memError = e.message; }
-  result.candidatesChecked = ['/usr/lib/chromium/chromium', '/usr/bin/chromium-browser', '/usr/bin/chromium'].map(c => ({ path: c, exists: fs.existsSync(c) }));
-  try { result.executableExists = fs.existsSync(exe); } catch (e) { result.executableExists = false; result.existsError = e.message; }
-  if (result.executableExists) {
+  result.candidatesChecked = ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/lib/chromium/chromium', '/usr/bin/google-chrome'].map(c => ({ path: c, exists: fs.existsSync(c) }));
+  try { result.executableExists = exe ? fs.existsSync(exe) : false; } catch (e) { result.executableExists = false; result.existsError = e.message; }
+  if (result.executableExists && exe) {
     try {
       const st = fs.statSync(exe);
       result.executableFile = st.isFile();
       result.mode = (st.mode & 0o111) ? 'executable' : 'NOT_EXECUTABLE';
     } catch (e) { result.statError = e.message; }
   }
-  if (process.platform === 'linux' && result.executableExists) {
+  if (process.platform === 'linux' && result.executableExists && exe) {
     try {
       const ldd = execSync(`ldd "${exe}" 2>&1`, { timeout: 15000 }).toString();
       result.lddMissing = ldd.split('\n').filter(l => l.includes('not found')).map(l => l.trim());
@@ -1799,11 +1799,13 @@ ev.on('authenticated', () => {
 
 async function initClient() {
 try { killStaleChromium(); } catch {}
+const chromiumPath = resolveChromiumPath();
+const isChrome = Boolean(chromiumPath && (chromiumPath.includes('google-chrome') || chromiumPath.includes('chrome.exe')));
 create({
   sessionId: 'main',
   headless: true,
-  useChrome: true,
-  executablePath: resolveChromiumPath(),
+  useChrome: isChrome,
+  ...(chromiumPath ? { executablePath: chromiumPath } : {}),
   chromiumArgs: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process', '--no-zygote', '--disable-gpu', '--disable-extensions', '--js-flags=--max-old-space-size=256', '--renderer-process-limit=1'],
   useStealth: true,
   port: 8080,

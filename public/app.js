@@ -1445,12 +1445,22 @@ async function poll() {
           qrPanel.classList.add('hidden');
         }
       }
-      if (qrBanner && qrBannerImg) {
-        if (qrData) {
+      if (qrBanner) {
+        qrBanner.classList.remove('hidden');
+        const bannerTitle = qrBanner.querySelector('h3');
+        const bannerText = qrBanner.querySelector('p');
+        const bannerHint = qrBanner.querySelector('.hint');
+        if (qrData && qrBannerImg) {
           qrBannerImg.src = getQRImageSrc(qrData);
-          qrBanner.classList.remove('hidden');
+          qrBannerImg.style.display = 'block';
+          if (bannerTitle) bannerTitle.textContent = 'Link your WhatsApp to get started';
+          if (bannerText) bannerText.textContent = 'Scan the QR code below with your phone:';
+          if (bannerHint) bannerHint.textContent = 'Open WhatsApp → Settings → Linked Devices → Link a Device';
         } else {
-          qrBanner.classList.add('hidden');
+          if (qrBannerImg) qrBannerImg.style.display = 'none';
+          if (bannerTitle) bannerTitle.textContent = 'Starting WhatsApp Web Engine...';
+          if (bannerText) bannerText.textContent = 'Please wait a moment while the browser initializes.';
+          if (bannerHint) bannerHint.textContent = 'The QR code will appear here automatically in a few seconds...';
         }
       }
     }

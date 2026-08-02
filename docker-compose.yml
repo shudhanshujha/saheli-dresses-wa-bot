@@ -8,6 +8,7 @@ services:
     environment:
       - PORT=8080
       - HOST=0.0.0.0
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
       - WA_USER_DATA_DIR=/app/session-data
     volumes:
       - wa-session-data:/app/session-data

@@ -303,16 +303,19 @@ client.on('ready', () => {
   waitForStore().catch(err => console.error('[READY] Warm-up error:', err));
 });
 
-client.on('disconnected', (reason) => {
-  if (manualLogout) return;
-  console.warn('[DISCONNECTED] Bot disconnected:', reason, '— reinitializing…');
-  botStatus = 'starting';
-  clientReady = false;
-  currentQR = '';
-  setTimeout(() => {
-    client.initialize().catch((err) => console.error('[REINIT] Failed to reinitialize:', err));
-  }, 5000);
-});
+  client.on('disconnected', (reason) => {
+    if (manualLogout) return;
+    console.warn('[DISCONNECTED] Bot disconnected:', reason, '— reinitializing…');
+    botStatus = 'starting';
+    clientReady = false;
+    currentQR = '';
+    setTimeout(() => {
+      client.initialize().catch((err) => console.error('[REINIT] Failed to reinitialize:', err));
+    }, 5000);
+  });
+
+  client.initialize().catch((err) => console.error('[INIT ERROR] Failed to initialize client:', err));
+}
 
 // ── Message Handler ──────────────────────────────────────────────────────────
 
@@ -408,11 +411,6 @@ client.on('message', async (message) => {
   }
 });
 
-  client.initialize().catch((err) => {
-    console.error('[INIT ERROR]', err);
-  });
-}
-
 let initWatchdog = null;
 function armInitWatchdog() {
   clearTimeout(initWatchdog);
@@ -442,7 +440,7 @@ import path from 'path';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
-const PORT = process.env.WEBHOOK_PORT ?? 3001;
+const PORT = Number(process.env.PORT || process.env.WA_PORT || process.env.WEBHOOK_PORT || 8080);
 
 app.use(express.json({
   limit: '50mb',
@@ -1131,7 +1129,7 @@ app.get('/health', (_req, res) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log('[SERVER] saheli dresses WA bot running on http://localhost:' + PORT);
 });
 

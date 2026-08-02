@@ -6,6 +6,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
+import { execSync } from 'child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, 'data');
@@ -24,6 +25,7 @@ let currentQR = null;
 let lastError = null;
 let launchAttempts = 0;
 let waReady = false;
+let preflight = null;
 
 let supabase = null;
 let supabaseEnabled = false;
@@ -385,6 +387,7 @@ app.get('/api/status', (req, res) => {
     uptime: clientInstance?._startTime || null,
     lastError: lastError || null,
     launchAttempts,
+    preflight,
   });
 });
 
@@ -1734,6 +1737,34 @@ function seedData() {
 
 seedData();
 
+/* ---------- BROWSER PREFLIGHT ---------- */
+function runBrowserPreflight() {
+  const result = { platform: process.platform, arch: process.arch, node: process.version };
+  const exe = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
+  result.executablePath = exe;
+  try { result.executableExists = fs.existsSync(exe); } catch (e) { result.executableExists = false; result.existsError = e.message; }
+  if (result.executableExists) {
+    try {
+      const st = fs.statSync(exe);
+      result.executableFile = st.isFile();
+      result.mode = (st.mode & 0o111) ? 'executable' : 'NOT_EXECUTABLE';
+    } catch (e) { result.statError = e.message; }
+  }
+  if (process.platform === 'linux' && result.executableExists) {
+    try {
+      const ldd = execSync(`ldd "${exe}" 2>&1`, { timeout: 15000 }).toString();
+      result.lddMissing = ldd.split('\n').filter(l => l.includes('not found')).map(l => l.trim());
+      if (ldd.includes('not a dynamic executable')) result.lddMissing = result.lddMissing.length ? result.lddMissing : ['binary is static or invalid'];
+    } catch (e) { result.lddError = e.stderr ? e.stderr.toString() : e.message; }
+  }
+  preflight = result;
+  console.log('[Preflight] chromium:', JSON.stringify(result, null, 2));
+}
+
+try {
+  runBrowserPreflight();
+} catch (e) { console.error('[Preflight] failed:', e.message); }
+
 /* ---------- INIT ---------- */
 ev.on('qr.*', (data, sessionId) => {
   if (data && typeof data === 'string') {
@@ -1751,6 +1782,7 @@ create({
   headless: true,
   useChrome: true,
   executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
+  chromiumArgs: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
   useStealth: true,
   port: 8080,
   multiDevice: true,
@@ -1813,7 +1845,7 @@ create({
   });
 }).catch(e => {
   launchAttempts++;
-  lastError = e?.message || String(e);
+  lastError = (e?.message || String(e)) + (e?.stack ? '\n' + e.stack.split('\n').slice(0, 4).join('\n') : '');
   console.error('FAILED:', lastError);
   waReady = false;
   if (!clientInstance) setTimeout(initClient, 5000);

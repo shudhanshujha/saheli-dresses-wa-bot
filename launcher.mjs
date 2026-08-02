@@ -1,4 +1,5 @@
-import { create, ev } from '@open-wa/wa-automate';
+import pkg from 'whatsapp-web.js';
+const { Client, LocalAuth } = pkg;
 import express from 'express';
 import http from 'http';
 import path from 'path';
@@ -1788,89 +1789,72 @@ try {
   console.error('[Preflight] failed:', e.message);
 }
 
-const handleQREvent = (data) => {
-  if (!data) return;
-  if (typeof data === 'string') {
-    currentQR = data;
-  } else if (typeof data === 'object') {
-    currentQR = data.base64Image || data.qr || data.asciiQR || null;
-  }
-};
-ev.on('qr.*', (data) => handleQREvent(data));
-ev.on('qr', (data) => handleQREvent(data));
-ev.on('qr.main', (data) => handleQREvent(data));
-ev.on('authenticated.*', () => {
-  currentQR = null;
-  waReady = true;
-});
-ev.on('authenticated', () => {
-  currentQR = null;
-  waReady = true;
-});
-
 async function initClient() {
-try { killStaleChromium(); } catch {}
-const chromiumPath = resolveChromiumPath();
-const isChrome = Boolean(chromiumPath && (chromiumPath.includes('google-chrome') || chromiumPath.includes('chrome.exe')));
-create({
-  sessionId: 'main',
-  headless: true,
-  useChrome: isChrome,
-  ...(chromiumPath ? { executablePath: chromiumPath } : {}),
-  chromiumArgs: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage',
-    '--disable-accelerated-2d-canvas',
-    '--no-first-run',
-    '--disable-gpu',
-    '--disable-extensions',
-    '--js-flags=--max-old-space-size=512',
-  ],
-  useStealth: true,
-  port: 8080,
-  multiDevice: true,
-  cacheEnabled: true,
-  popup: false,
-  blockCrashLogs: true,
-  logConsole: true,
-  disableSpins: true,
-  ezqr: true,
-  qrTimeout: 300,
-  authTimeout: 300,
-  autoReject: true,
-  killProcessOnTimeout: false,
-  customUserAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.204 Safari/537.36',
-  eventMode: true,
-  waitForRipeSession: false,
-  defaultViewport: null,
-  userDataDir: process.env.WA_USER_DATA_DIR || './session-data',
-  skipBrokenMethodsCheck: true,
-}).then(client => {
-  clientInstance = client;
-  clientInstance._startTime = Date.now();
-  console.log('CLIENT READY!', client.hostAccountNumber);
-  waReady = true;
-  initSupabase();
+  try { killStaleChromium(); } catch {}
+  const chromiumPath = resolveChromiumPath();
+  console.log('[Puppeteer] Launching browser using executable:', chromiumPath || 'bundled chromium');
 
-  /* resume pending scheduled messages */
-  const scheduled = readJSON('scheduled');
-  scheduled.filter(s => s.status === 'pending').forEach(s => scheduleMessage(s));
-
-  /* resume daily-paused campaigns */
-  cleanupDailyLog();
-  resumeDailyPausedCampaigns();
-  resumeScheduledCampaigns();
-  flushBroadcastQueue();
-
-  client.onStateChanged((state) => {
-    console.log('State:', state);
-    if (state === 'CONNECTED' && clientInstance) {
-      clientInstance._startTime = Date.now();
-    }
-    waReady = state === 'CONNECTED';
+  const client = new Client({
+    puppeteer: {
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--disable-gpu',
+        '--disable-extensions',
+      ],
+      ...(chromiumPath ? { executablePath: chromiumPath } : {}),
+      headless: true,
+    },
+    authStrategy: new LocalAuth({ clientId: 'main', dataPath: process.env.WA_USER_DATA_DIR || './session-data' }),
+    qrMaxRetries: 10,
+    takeoverOnConflict: true,
+    webVersionCache: {
+      type: 'remote',
+      remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1014164287-alpha.html',
+    },
   });
-  client.onMessage(msg => {
+
+  client.on('qr', (qr) => {
+    currentQR = qr;
+    waReady = false;
+    console.log('[QR] New QR code generated successfully — visit dashboard to scan');
+  });
+
+  client.on('authenticated', () => {
+    console.log('[AUTH] Bot authenticated successfully');
+    currentQR = null;
+    waReady = true;
+  });
+
+  client.on('ready', () => {
+    console.log('[READY] WhatsApp Web client is ready');
+    clientInstance = client;
+    clientInstance._startTime = Date.now();
+    waReady = true;
+    currentQR = null;
+    initSupabase();
+
+    /* resume pending scheduled messages */
+    const scheduled = readJSON('scheduled');
+    scheduled.filter(s => s.status === 'pending').forEach(s => scheduleMessage(s));
+
+    cleanupDailyLog();
+    resumeDailyPausedCampaigns();
+    resumeScheduledCampaigns();
+    flushBroadcastQueue();
+  });
+
+  client.on('disconnected', (reason) => {
+    console.warn('[DISCONNECTED] Bot disconnected:', reason);
+    waReady = false;
+    currentQR = null;
+    setTimeout(initClient, 5000);
+  });
+
+  client.on('message', async (msg) => {
     console.log('MSG from', msg.from, ':', (msg.body || '').slice(0, 60));
     saveMsg(msg.from, {
       id: msg.id?._serialized || msg.id,
@@ -1887,16 +1871,17 @@ create({
       try { handleIncomingMessage(msg); } catch (err) { console.error('[INCOMING MSG ERROR]', err); }
     }
   });
-}).catch(e => {
-  launchAttempts++;
-  lastError = (e?.message || String(e)) + (e?.stack ? '\n' + e.stack.split('\n').slice(0, 4).join('\n') : '');
-  console.error('FAILED:', lastError);
-  waReady = false;
-  if (!clientInstance) {
-    try { killStaleChromium(); } catch {}
-    setTimeout(initClient, Math.min(15000, 5000 * Math.pow(1.3, Math.floor(launchAttempts / 10))));
-  }
-});
+
+  client.initialize().catch(e => {
+    launchAttempts++;
+    lastError = (e?.message || String(e)) + (e?.stack ? '\n' + e.stack.split('\n').slice(0, 4).join('\n') : '');
+    console.error('[LAUNCH ERROR]:', lastError);
+    waReady = false;
+    if (!clientInstance) {
+      try { killStaleChromium(); } catch {}
+      setTimeout(initClient, Math.min(15000, 5000 * Math.pow(1.3, Math.floor(launchAttempts / 10))));
+    }
+  });
 }
 
 function killStaleChromium() {

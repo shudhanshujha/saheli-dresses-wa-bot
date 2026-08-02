@@ -364,7 +364,10 @@ function cleanupDailyLog() {
 // periodic check to resume daily-paused campaigns
 setInterval(() => {
   const remaining = getDailySendRemaining();
-  if (remaining > 0) resumeDailyPausedCampaigns();
+  if (remaining > 0) {
+    resumeDailyPausedCampaigns();
+    flushBroadcastQueue();
+  }
 }, 60000);
 
 /* ---------- STATUS ---------- */
@@ -457,7 +460,7 @@ function saveMsg(chatId, msg) {
 app.get('/api/chats', async (req, res) => {
   if (!clientInstance) return res.status(503).json({ error: 'not connected' });
   try {
-    const chats = await withRetry(() => clientInstance.getAllChats());
+    const chats = (await withRetry(() => clientInstance.getAllChats())) || [];
     res.json(chats.map(c => ({
       id: c.id._serialized || c.id,
       name: c.name || c.formattedTitle || c.id,
@@ -582,6 +585,95 @@ app.post('/api/send/media', async (req, res) => {
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
+
+/* ---------- BROADCAST ---------- */
+const BROADCAST_QUEUE_PATH = path.join(DATA_DIR, 'broadcast-queue.json');
+let broadcastQueue = [];
+try { broadcastQueue = JSON.parse(fs.readFileSync(BROADCAST_QUEUE_PATH, 'utf8')); } catch {}
+
+function saveBroadcastQueue() {
+  fs.writeFileSync(BROADCAST_QUEUE_PATH, JSON.stringify(broadcastQueue, null, 2));
+}
+
+async function sendToChat(chatId, payload) {
+  if (!clientInstance) throw new Error('not connected');
+  if (payload.mimetype && payload.data) {
+    if (payload.mimetype.startsWith('image')) {
+      await withRetry(() => clientInstance.sendImage(chatId, payload.data, payload.filename || 'image.png', payload.message || ''));
+    } else {
+      await withRetry(() => clientInstance.sendFile(chatId, payload.data, payload.filename || 'file', payload.message || ''));
+    }
+  } else {
+    await withRetry(() => clientInstance.sendText(chatId, payload.message));
+  }
+  incrementDailySendCount();
+  saveMsg(chatId, { id: Date.now().toString(), from: chatId, fromMe: true, body: payload.message || '', timestamp: Math.floor(Date.now() / 1000), type: 'text' });
+  supabaseInsertMessage(chatId, payload.message || '', 'broadcast', 'outbound', null, null, 'sent', null);
+}
+
+app.post('/api/broadcast', async (req, res) => {
+  if (!clientInstance) return res.status(503).json({ error: 'not connected' });
+  const { chatIds: rawIds, message, templateId, mimetype, data, filename } = req.body;
+  if (!rawIds?.length) return res.status(400).json({ error: 'chatIds[] required' });
+  const chatIds = [...new Set((Array.isArray(rawIds) ? rawIds : []).map(String).map(s => s.trim()).filter(Boolean))];
+  if (!chatIds.length) return res.status(400).json({ error: 'chatIds[] must contain valid recipient IDs' });
+
+  let msg = message;
+  if (templateId && !msg) {
+    const templates = readJSON('templates');
+    const tpl = templates.find(t => t.id === templateId);
+    if (tpl) msg = tpl.body;
+  }
+  if (!msg && !data) return res.status(400).json({ error: 'message or templateId or media required' });
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+  const emit = (payload) => { try { res.write(`data: ${JSON.stringify(payload)}\n\n`); } catch { /* client gone */ } };
+
+  const payload = { message: msg, mimetype: mimetype || null, data: data || null, filename: filename || null };
+  const results = [];
+  let failed = 0;
+  let queued = 0;
+  let done = 0;
+
+  for (let i = 0; i < chatIds.length; i++) {
+    const chatId = chatIds[i];
+    if (getDailySendRemaining() <= 0) {
+      broadcastQueue.push({ chatIds: chatIds.slice(i), payload, createdAt: new Date().toISOString() });
+      queued = chatIds.length - i;
+      saveBroadcastQueue();
+      break;
+    }
+    emit({ type: 'progress', done, total: chatIds.length, current: chatId });
+    try {
+      await sendToChat(chatId, payload);
+      results.push({ chatId, success: true });
+      done++;
+    } catch (e) {
+      failed++;
+      results.push({ chatId, success: false, error: e.message });
+    }
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  emit({ type: 'done', results, failed, queued, quota: { used: getTodaySendCount(), limit: DAILY_SEND_LIMIT, remaining: getDailySendRemaining() } });
+  res.end();
+});
+
+function flushBroadcastQueue() {
+  if (!clientInstance || !broadcastQueue.length) return;
+  while (broadcastQueue.length && getDailySendRemaining() > 0) {
+    const batch = broadcastQueue[0];
+    const chatId = batch.chatIds.shift();
+    if (chatId) {
+      try { sendToChat(chatId, batch.payload); }
+      catch (e) { console.error('[Broadcast queue] send failed:', e.message); }
+    }
+    if (!batch.chatIds.length) broadcastQueue.shift();
+    saveBroadcastQueue();
+  }
+}
 
 /* ---------- CONTACTS ---------- */
 app.post('/api/contacts/import', (req, res) => {
@@ -1648,6 +1740,7 @@ create({
   /* resume daily-paused campaigns */
   cleanupDailyLog();
   resumeDailyPausedCampaigns();
+  flushBroadcastQueue();
 
   client.onStateChanged((state) => {
     console.log('State:', state);

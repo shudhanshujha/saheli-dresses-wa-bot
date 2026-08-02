@@ -1175,7 +1175,10 @@ async function openBroadcastModal() {
   const modal = document.getElementById('modal-content');
   modal.innerHTML = `
     <h3>📡 Broadcast Message</h3>
-    <div class="form-group"><label>Message</label><textarea id="bc-msg" rows="4" placeholder="Type your message..."></textarea></div>
+    <div class="form-group"><label>Template (optional)</label>
+      <select id="bc-template"><option value="">— Select a template —</option></select>
+    </div>
+    <div class="form-group"><label>Message</label><textarea id="bc-msg" rows="4" placeholder="Type your message or pick a template..."></textarea></div>
     <div class="form-group"><label>Attachment (optional)</label>
       <div class="bc-row">
         <button class="btn btn-secondary btn-sm" id="bc-attach-btn" type="button">📎 Attach file</button>
@@ -1201,13 +1204,22 @@ async function openBroadcastModal() {
     <div class="modal-actions"><button class="btn btn-primary" id="bc-send" disabled>Send Broadcast</button><button class="btn btn-secondary" id="bc-cancel">Cancel</button></div>
   `;
   showModal();
-  const [chats, contactsRes] = await Promise.all([API('/api/chats'), API('/api/contacts?pageSize=500')]);
+  const [chats, contactsRes, templatesRes] = await Promise.all([API('/api/chats'), API('/api/contacts?pageSize=500'), API('/api/templates')]);
   const contacts = contactsRes.error ? [] : (contactsRes.contacts || []);
+  const templates = templatesRes.error ? [] : (templatesRes || []);
   const listEl = document.getElementById('bc-chat-list');
   const selectedIds = new Set();
   let bcMedia = null;
   let bcTab = 'chats';
   let bcSearch = '';
+
+  const tplSelect = document.getElementById('bc-template');
+  tplSelect.innerHTML = '<option value="">— Select a template —</option>' + templates.map(t => `<option value="${esc(t.id)}">${esc(t.name || t.id)}</option>`).join('');
+  tplSelect.addEventListener('change', () => {
+    const t = templates.find(x => x.id === tplSelect.value);
+    if (t) document.getElementById('bc-msg').value = t.body || '';
+    updateState();
+  });
 
   document.getElementById('bc-attach-btn').addEventListener('click', () => document.getElementById('bc-file').click());
   document.getElementById('bc-file').addEventListener('change', function() {
@@ -1336,7 +1348,7 @@ async function openBroadcastModal() {
     const status = document.getElementById('bc-status');
     btn.disabled = true; btn.textContent = 'Sending...';
     status.textContent = `Preparing to send to ${chatIds.length} recipient(s)...`;
-    const payload = { chatIds, message: msg };
+    const payload = { chatIds, message: msg, templateId: tplSelect.value || null };
     if (bcMedia) { payload.mimetype = bcMedia.mimetype; payload.data = bcMedia.data; payload.filename = bcMedia.filename; }
     try {
       const resp = await fetch('/api/broadcast', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -1373,9 +1385,10 @@ async function openBroadcastModal() {
       if (doneData) {
         const ok = doneData.results?.filter(r => r.success).length || 0;
         const fail = doneData.failed || 0;
-        status.textContent = `✅ Sent to ${ok}${fail ? `, ${fail} failed` : ''}`;
+        const queued = doneData.queued || 0;
+        status.textContent = `✅ Sent to ${ok}${fail ? `, ${fail} failed` : ''}${queued ? `, ${queued} queued for tomorrow (daily limit)` : ''}`;
         btn.textContent = 'Done';
-        setTimeout(hideModal, 1500);
+        setTimeout(hideModal, 2000);
       } else {
         status.textContent = 'Broadcast finished (no summary received)';
         btn.textContent = 'Done';
@@ -1434,12 +1447,17 @@ async function poll() {
         }
       }
     }
-    if (chats.length && state.activeView === 'inbox') {
-      const prevSig = chatListSignature;
-      state.chats = chats;
-      renderChats(chatListFilter());
-      if (state.activeChat && chatListSignature !== prevSig) {
-        loadMessages(state.activeChat);
+    if (state.activeView === 'inbox') {
+      if (!chats.error) {
+        const prevSig = chatListSignature;
+        state.chats = chats;
+        renderChats(chatListFilter());
+        if (state.activeChat && chatListSignature !== prevSig) {
+          loadMessages(state.activeChat);
+        }
+      } else if (!state.chats.length) {
+        const el = document.getElementById('chat-list');
+        if (chatListSignature !== 'notconnected') { chatListSignature = 'notconnected'; el.innerHTML = '<div style="padding:24px;text-align:center;color:#555;font-size:13px">Not connected — scan the QR code to load conversations</div>'; }
       }
     }
     if (state.activeView === 'analytics') loadAnalytics();

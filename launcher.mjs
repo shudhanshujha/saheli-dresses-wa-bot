@@ -1777,12 +1777,13 @@ ev.on('authenticated.*', () => {
 });
 
 async function initClient() {
+try { killStaleChromium(); } catch {}
 create({
   sessionId: 'main',
   headless: true,
   useChrome: true,
   executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
-  chromiumArgs: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+  chromiumArgs: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process', '--no-zygote', '--disable-gpu', '--disable-extensions', '--js-flags=--max-old-space-size=256', '--renderer-process-limit=1'],
   useStealth: true,
   port: 8080,
   multiDevice: true,
@@ -1848,8 +1849,17 @@ create({
   lastError = (e?.message || String(e)) + (e?.stack ? '\n' + e.stack.split('\n').slice(0, 4).join('\n') : '');
   console.error('FAILED:', lastError);
   waReady = false;
-  if (!clientInstance) setTimeout(initClient, 5000);
+  if (!clientInstance) {
+    try { killStaleChromium(); } catch {}
+    setTimeout(initClient, Math.min(15000, 5000 * Math.pow(1.3, Math.floor(launchAttempts / 10))));
+  }
 });
+}
+
+function killStaleChromium() {
+  if (process.platform !== 'linux') return;
+  try { execSync('pkill -9 -f chromium || true', { timeout: 5000 }); } catch {}
+  try { execSync('pkill -9 -f chrome || true', { timeout: 5000 }); } catch {}
 }
 
 const PORT = Number(process.env.PORT || process.env.WA_PORT || 8080);

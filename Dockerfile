@@ -47,6 +47,7 @@ COPY . .
 # Apply open-wa v4.76.0 compatibility patch (window.Debug no longer exists in modern WhatsApp Web)
 COPY patches/initializer.js node_modules/@open-wa/wa-automate/dist/controllers/initializer.js
 COPY patches/config/puppeteer.config.js node_modules/@open-wa/wa-automate/dist/config/puppeteer.config.js
+COPY patches/browser.js node_modules/@open-wa/wa-automate/dist/controllers/browser.js
 
 VOLUME ["/app/session-data"]
 

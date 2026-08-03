@@ -3,6 +3,11 @@ FROM node:20-slim
 RUN apt-get update && apt-get install -y \
   chromium \
   fonts-liberation \
+  fonts-ipafont-gothic \
+  fonts-wqy-zenhei \
+  fonts-thai-tlwg \
+  fonts-kacst \
+  fonts-freefont-ttf \
   libappindicator3-1 \
   libasound2 \
   libatk-bridge2.0-0 \
@@ -30,6 +35,7 @@ RUN apt-get update && apt-get install -y \
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV WA_USER_DATA_DIR=/app/session-data
 
 WORKDIR /app
 
@@ -41,6 +47,8 @@ COPY . .
 # Apply open-wa v4.76.0 compatibility patch (window.Debug no longer exists in modern WhatsApp Web)
 COPY patches/initializer.js node_modules/@open-wa/wa-automate/dist/controllers/initializer.js
 COPY patches/config/puppeteer.config.js node_modules/@open-wa/wa-automate/dist/config/puppeteer.config.js
+
+VOLUME ["/app/session-data"]
 
 EXPOSE 8080
 

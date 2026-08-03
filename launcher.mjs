@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { execSync } from 'child_process';
+import QRCode from 'qrcode';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, 'data');
@@ -1819,10 +1820,16 @@ async function initClient() {
     },
   });
 
-  client.on('qr', (qr) => {
+  client.on('qr', async (qr) => {
     currentQR = qr;
     waReady = false;
-    console.log('[QR] New QR code generated successfully — visit dashboard to scan');
+    try {
+      const png = await QRCode.toDataURL(qr, { margin: 2, width: 320, errorCorrectionLevel: 'M' });
+      currentQR = png;
+      console.log('[QR] New QR code generated successfully — visit dashboard to scan');
+    } catch (e) {
+      console.error('[QR] render failed, storing raw:', e.message);
+    }
   });
 
   client.on('authenticated', () => {

@@ -17,3 +17,5 @@ whatsapp.png
 # end managed
 
 .vercel
+dist/
+data/

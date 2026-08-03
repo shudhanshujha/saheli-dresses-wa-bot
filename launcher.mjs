@@ -6,7 +6,9 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
-import { createClient } from '@supabase/supabase-js';
+import db from './db/init.mjs';
+import { saveMedia, getMediaAsset } from './db/media.mjs';
+import './jobs/purge.mjs';
 import { execSync } from 'child_process';
 import QRCode from 'qrcode';
 
@@ -29,195 +31,86 @@ let launchAttempts = 0;
 let waReady = false;
 let preflight = null;
 
-let supabase = null;
-let supabaseEnabled = false;
-let encryptionKey = null;
-
-function initEncryption() {
-  const key = process.env.ENCRYPTION_KEY;
-  if (!key) {
-    console.log('[Security] ENCRYPTION_KEY not set — sensitive fields will be stored in plaintext');
-    return;
-  }
-  const keyBuf = Buffer.from(key.length >= 32 ? key.slice(0, 32) : key.padEnd(32, '0'), 'utf8');
-  encryptionKey = keyBuf;
-  console.log('[Security] Encryption enabled');
-}
-
-function encryptText(plainText) {
-  if (!encryptionKey || !plainText) return plainText;
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv('aes-256-gcm', encryptionKey, iv);
-  let encrypted = cipher.update(plainText, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  const authTag = cipher.getAuthTag().toString('hex');
-  return iv.toString('hex') + ':' + authTag + ':' + encrypted;
-}
-
-function decryptText(encryptedText) {
-  if (!encryptionKey || !encryptedText) return encryptedText;
+function supabaseUpsertContact(waId, name, number, tags, label, notes) {
+  if (!waId) return null;
   try {
-    const parts = encryptedText.split(':');
-    if (parts.length !== 3) return encryptedText;
-    const iv = Buffer.from(parts[0], 'hex');
-    const authTag = Buffer.from(parts[1], 'hex');
-    const encrypted = parts[2];
-    const decipher = crypto.createDecipheriv('aes-256-gcm', encryptionKey, iv);
-    decipher.setAuthTag(authTag);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
-  } catch { return encryptedText; }
-}
-
-function initSupabase() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
-    console.log('[Supabase] SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY not set — Supabase features disabled');
-    return;
-  }
-  try {
-    supabase = createClient(url, key);
-    supabaseEnabled = true;
-    initEncryption();
-    console.log('[Supabase] Client initialized');
-    ensureDefaultUser();
-  } catch (e) {
-    console.error('[Supabase] Init failed:', e.message);
-  }
-}
-
-const PBKDF2_ITERATIONS = 100000;
-const PBKDF2_KEY_LEN = 32;
-const PBKDF2_DIGEST = 'sha256';
-
-function hashPassword(password, salt) {
-  salt = salt || crypto.randomBytes(16).toString('hex');
-  const key = crypto.pbkdf2Sync(password, salt, PBKDF2_ITERATIONS, PBKDF2_KEY_LEN, PBKDF2_DIGEST);
-  return salt + ':' + key.toString('hex');
-}
-
-function verifyPassword(password, stored) {
-  const parts = stored.split(':');
-  if (parts.length !== 2) return false;
-  const salt = parts[0];
-  const key = crypto.pbkdf2Sync(password, salt, PBKDF2_ITERATIONS, PBKDF2_KEY_LEN, PBKDF2_DIGEST);
-  return key.toString('hex') === parts[1];
-}
-
-function generateToken() {
-  return crypto.randomBytes(32).toString('hex');
-}
-
-async function ensureDefaultUser() {
-  if (!supabaseEnabled) return;
-  try {
-    const { data, error } = await supabase.from('users').select('*').limit(1);
-    if (error) { console.error('[Supabase] ensureDefaultUser select error:', error.message); return; }
-    if (data && data.length > 0) return;
-    const password = process.env.DASHBOARD_PASSWORD || 'admin';
-    if (!process.env.DASHBOARD_PASSWORD) {
-      console.warn('[Auth] WARNING: Using default password "admin". Set DASHBOARD_PASSWORD env var to change.');
+    const existing = db.prepare('SELECT id FROM contacts WHERE wa_id = ?').get(waId);
+    if (existing) {
+      db.prepare(`
+        UPDATE contacts SET
+          name = COALESCE(?, name),
+          label = COALESCE(?, label),
+          notes = COALESCE(?, notes),
+          tags = COALESCE(?, tags),
+          last_message_at = datetime('now')
+        WHERE wa_id = ?
+      `).run(name || null, label || null, notes || null, tags ? JSON.stringify(tags) : null, waId);
+      return { id: existing.id, wa_id: waId, name };
+    } else {
+      const id = crypto.randomUUID();
+      db.prepare(`
+        INSERT INTO contacts (id, wa_id, name, tags, label, notes, last_message_at)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      `).run(id, waId, name || waId, JSON.stringify(tags || []), label || null, notes || null);
+      return { id, wa_id: waId, name };
     }
-    const hash = hashPassword(password);
-    const { error: insErr } = await supabase.from('users').insert({ username: 'admin', password_hash: hash });
-    if (insErr) console.error('[Supabase] ensureDefaultUser insert error:', insErr.message);
-    else console.log('[Auth] Default user created');
-  } catch (e) { console.error('[Supabase] ensureDefaultUser exception:', e.message); }
-}
-
-async function validateSession(token) {
-  if (!supabaseEnabled || !token) return null;
-  try {
-    const { data, error } = await supabase
-      .from('sessions')
-      .select('*, users(username)')
-      .eq('token', token)
-      .gt('expires_at', new Date().toISOString())
-      .single();
-    if (error || !data) return null;
-    return data;
-  } catch (e) { return null; }
-}
-
-async function supabaseUpsertContact(waId, name, number, tags, label, notes) {
-  if (!supabaseEnabled) return null;
-  try {
-    const encryptedNotes = encryptText(notes || null);
-    const { data, error } = await supabase
-      .from('contacts')
-      .upsert({ wa_id: waId, name: name || null, tags: tags || [], label: label || null, notes: encryptedNotes }, { onConflict: 'wa_id' })
-      .select()
-      .single();
-    if (error) console.error('[Supabase] upsertContact error:', error.message);
-    return data;
-  } catch (e) {
-    console.error('[Supabase] upsertContact exception:', e.message);
+  } catch (err) {
+    console.error('[SQLite] upsertContact error:', err.message);
     return null;
   }
 }
 
-async function supabaseInsertMessage(waId, body, source, direction, campaignId, mediaId, status, waMessageId) {
-  if (!supabaseEnabled) return null;
+function supabaseInsertMessage(waId, body, source, direction = 'outbound', campaignId = null, mediaId = null, status = 'sent', waMessageId = null) {
+  if (!waId) return null;
   try {
-    const encryptedBody = encryptText(body || null);
-    const { data, error } = await supabase
-      .from('message_history')
-      .insert({ wa_id: waId, body: encryptedBody, source, direction, campaign_id: campaignId || null, media_id: mediaId || null, status: status || 'sent', wa_message_id: waMessageId || null })
-      .select()
-      .single();
-    if (error) console.error('[Supabase] insertMessage error:', error.message);
-    return data;
-  } catch (e) {
-    console.error('[Supabase] insertMessage exception:', e.message);
+    const contactId = supabaseUpsertContact(waId)?.id || null;
+    const id = crypto.randomUUID();
+    db.prepare(`
+      INSERT INTO message_history (id, contact_id, wa_id, campaign_id, source, direction, body, media_id, status, wa_message_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, contactId, waId, campaignId, source, direction, body, mediaId, status, waMessageId);
+    return { id, wa_id: waId, body, source, direction };
+  } catch (err) {
+    console.error('[SQLite] insertMessage error:', err.message);
     return null;
   }
 }
 
 async function supabaseUploadMedia(buffer, filename, mimeType) {
-  if (!supabaseEnabled) return null;
   try {
-    const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'broadcast-media';
-    const filePath = `media/${Date.now()}-${filename}`;
-    const { data, error } = await supabase.storage.from(bucket).upload(filePath, buffer, { contentType: mimeType, upsert: false });
-    if (error) { console.error('[Supabase] uploadMedia error:', error.message); return null; }
-    const { data: asset, error: assetErr } = await supabase
-      .from('media_assets')
-      .insert({ storage_path: filePath, mime_type: mimeType, file_name: filename, size_bytes: buffer.length })
-      .select()
-      .single();
-    if (assetErr) console.error('[Supabase] insertMediaAsset error:', assetErr.message);
-    return asset;
-  } catch (e) {
-    console.error('[Supabase] uploadMedia exception:', e.message);
+    const id = await saveMedia(buffer, filename, mimeType);
+    return { id, file_name: filename, mime_type: mimeType };
+  } catch (err) {
+    console.error('[SQLite] uploadMedia error:', err.message);
     return null;
   }
 }
 
-async function supabaseResolveWaitlist(waId) {
-  if (!supabaseEnabled) return;
+function supabaseResolveWaitlist(waId) {
+  if (!waId) return;
   try {
-    const { error } = await supabase
-      .from('waitlist')
-      .update({ resolved_at: new Date().toISOString() })
-      .eq('wa_id', waId)
-      .is('resolved_at', null);
-    if (error) console.error('[Supabase] resolveWaitlist error:', error.message);
-  } catch (e) {
-    console.error('[Supabase] resolveWaitlist exception:', e.message);
+    const contact = db.prepare('SELECT id FROM contacts WHERE wa_id = ?').get(waId);
+    if (contact) {
+      db.prepare(`UPDATE waitlist SET resolved_at = datetime('now') WHERE contact_id = ? AND resolved_at IS NULL`).run(contact.id);
+    }
+  } catch (err) {
+    console.error('[SQLite] resolveWaitlist error:', err.message);
   }
 }
 
-async function supabaseInsertWaitlist(contactId, waId, reason, messageId) {
-  if (!supabaseEnabled) return;
+function supabaseInsertWaitlist(contactId, waId, reason, messageId) {
   try {
-    const { error } = await supabase
-      .from('waitlist')
-      .insert({ contact_id: contactId, wa_id: waId, reason, message_id: messageId || null });
-    if (error) console.error('[Supabase] insertWaitlist error:', error.message);
-  } catch (e) {
-    console.error('[Supabase] insertWaitlist exception:', e.message);
+    if (!contactId && waId) {
+      contactId = supabaseUpsertContact(waId)?.id;
+    }
+    if (!contactId) return;
+    const id = crypto.randomUUID();
+    db.prepare(`
+      INSERT INTO waitlist (id, contact_id, reason, message_id)
+      VALUES (?, ?, ?, ?)
+    `).run(id, contactId, reason, messageId);
+  } catch (err) {
+    console.error('[SQLite] insertWaitlist error:', err.message);
   }
 }
 
@@ -269,54 +162,77 @@ app.post('/api/logout', authMiddleware, async (req, res) => {
 });
 
 /* ---------- MESSAGE HISTORY ---------- */
-app.get('/api/history', authMiddleware, async (req, res) => {
-  if (!supabaseEnabled) return res.status(503).json({ error: 'supabase not configured' });
+app.get('/api/history', authMiddleware, (req, res) => {
   const { page = '1', pageSize = '50', source, wa_id } = req.query;
   const p = Math.max(1, parseInt(page, 10) || 1);
   const ps = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 50));
   try {
-    let query = supabase.from('message_history').select('*, contacts(wa_id, name), media_assets(file_name, mime_type)').order('created_at', { ascending: false });
-    if (source) query = query.eq('source', source);
-    if (wa_id) query = query.eq('wa_id', wa_id);
-    const { data, error, count } = await query.range((p - 1) * ps, p * ps - 1);
-    if (error) return res.status(500).json({ error: error.message });
-    const messages = (data || []).map(m => ({ ...m, body: decryptText(m.body) }));
-    res.json({ messages, total: count || 0, page: p, pageSize: ps });
+    let whereClauses = [];
+    let params = [];
+    if (source) { whereClauses.push('mh.source = ?'); params.push(source); }
+    if (wa_id) { whereClauses.push('mh.wa_id = ?'); params.push(wa_id); }
+    const whereStr = whereClauses.length ? 'WHERE ' + whereClauses.join(' AND ') : '';
+
+    const countRow = db.prepare(`SELECT COUNT(*) as total FROM message_history mh ${whereStr}`).get(...params);
+    const offset = (p - 1) * ps;
+
+    const rows = db.prepare(`
+      SELECT mh.*, c.name as contact_name, c.wa_id as contact_wa_id, ma.file_name, ma.mime_type
+      FROM message_history mh
+      LEFT JOIN contacts c ON mh.contact_id = c.id
+      LEFT JOIN media_assets ma ON mh.media_id = ma.id
+      ${whereStr}
+      ORDER BY mh.created_at DESC
+      LIMIT ? OFFSET ?
+    `).all(...params, ps, offset);
+
+    const messages = rows.map(m => ({
+      ...m,
+      contacts: { wa_id: m.contact_wa_id || m.wa_id, name: m.contact_name },
+      media_assets: m.media_id ? { file_name: m.file_name, mime_type: m.mime_type } : null
+    }));
+
+    res.json({ messages, total: countRow?.total || 0, page: p, pageSize: ps });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.get('/api/history/media/:id', authMiddleware, async (req, res) => {
-  if (!supabaseEnabled) return res.status(503).json({ error: 'supabase not configured' });
+app.get('/api/history/media/:id', authMiddleware, (req, res) => {
   try {
-    const { data, error } = await supabase.from('media_assets').select('storage_path, mime_type, file_name').eq('id', req.params.id).single();
-    if (error || !data) return res.status(404).json({ error: 'media not found' });
-    const { data: fileData, error: dlErr } = await supabase.storage.from(process.env.SUPABASE_STORAGE_BUCKET || 'broadcast-media').download(data.storage_path);
-    if (dlErr) return res.status(404).json({ error: 'file not found' });
-    res.set('Content-Type', data.mime_type);
-    res.set('Content-Disposition', `attachment; filename="${esc(data.file_name || 'media')}"`);
-    res.end(Buffer.from(await fileData.arrayBuffer()));
+    const asset = getMediaAsset(req.params.id);
+    if (!asset) return res.status(404).json({ error: 'Media asset not found' });
+    const fullPath = path.join(process.cwd(), 'data', 'media', asset.file_path);
+    if (!fs.existsSync(fullPath)) return res.status(404).json({ error: 'Media file missing on disk' });
+    if (asset.mime_type) res.setHeader('Content-Type', asset.mime_type);
+    res.setHeader('Content-Disposition', `attachment; filename="${asset.file_name || 'media'}"`);
+    res.sendFile(fullPath);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 /* ---------- WAITLIST ---------- */
-app.get('/api/waitlist', authMiddleware, async (req, res) => {
-  if (!supabaseEnabled) return res.status(503).json({ error: 'supabase not configured' });
+app.get('/api/waitlist', authMiddleware, (req, res) => {
   try {
-    const { data, error } = await supabase.from('waitlist').select('*, contacts(wa_id, name), message_history(body, source)').eq('resolved_at', null).order('created_at', { ascending: true });
-    if (error) return res.status(500).json({ error: error.message });
-    const waitlist = (data || []).map(w => {
-      if (w.message_history?.body) w.message_history.body = decryptText(w.message_history.body);
-      return w;
-    });
+    const rows = db.prepare(`
+      SELECT w.*, c.wa_id as contact_wa_id, c.name as contact_name, mh.body as msg_body, mh.source as msg_source
+      FROM waitlist w
+      LEFT JOIN contacts c ON w.contact_id = c.id
+      LEFT JOIN message_history mh ON w.message_id = mh.id
+      WHERE w.resolved_at IS NULL
+      ORDER BY w.created_at ASC
+    `).all();
+
+    const waitlist = rows.map(w => ({
+      ...w,
+      contacts: { wa_id: w.contact_wa_id, name: w.contact_name },
+      message_history: w.msg_body ? { body: w.msg_body, source: w.msg_source } : null
+    }));
+
     res.json({ waitlist });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/waitlist/:id/resolve', authMiddleware, async (req, res) => {
-  if (!supabaseEnabled) return res.status(503).json({ error: 'supabase not configured' });
+app.post('/api/waitlist/:id/resolve', authMiddleware, (req, res) => {
   try {
-    const { error } = await supabase.from('waitlist').update({ resolved_at: new Date().toISOString() }).eq('id', req.params.id).is('resolved_at', null);
-    if (error) return res.status(500).json({ error: error.message });
+    db.prepare(`UPDATE waitlist SET resolved_at = datetime('now') WHERE id = ? AND resolved_at IS NULL`).run(req.params.id);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

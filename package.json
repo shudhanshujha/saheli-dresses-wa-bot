@@ -13,7 +13,7 @@
     "dev": "node --watch src/main.mjs",
     "service:install": "node scripts/install-service.mjs",
     "service:uninstall": "node scripts/uninstall-service.mjs",
-    "build:exe": "pkg . --targets host --output dist/SaheliWABot.exe"
+    "build:exe": "pkg . --targets host --output dist/SaheliWABot.exe --fallback-to-source"
   },
   "pkg": {
     "assets": [

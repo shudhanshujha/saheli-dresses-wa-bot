@@ -3,12 +3,28 @@
   "version": "1.0.0",
   "description": "WhatsApp bot with AI, webhooks, plugins, and MCP support via OpenWA",
   "type": "module",
+  "main": "src/main.mjs",
+  "bin": "src/main.mjs",
   "scripts": {
     "start": "node src/main.mjs",
     "start:launcher": "node launcher.mjs",
     "api": "node src/main.mjs",
     "webhook": "node src/webhook-receiver.mjs",
-    "dev": "node --watch src/main.mjs"
+    "dev": "node --watch src/main.mjs",
+    "service:install": "node scripts/install-service.mjs",
+    "service:uninstall": "node scripts/uninstall-service.mjs",
+    "build:exe": "pkg . --targets host --output dist/SaheliWABot.exe"
+  },
+  "pkg": {
+    "assets": [
+      "public/**/*",
+      "plugins/**/*",
+      "wa.config.mjs",
+      "patches/**/*"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ]
   },
   "keywords": [
     "whatsapp",
@@ -26,10 +42,14 @@
     "dotenv": "^17.4.2",
     "express": "^4.22.2",
     "node-cron": "^4.6.0",
+    "node-windows": "^1.0.0-beta.8",
     "puppeteer": "^23.11.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "qrcode": "^1.5.4",
     "whatsapp-web.js": "^1.34.0"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.22.0"
   }
 }
